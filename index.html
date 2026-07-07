@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>aivis — scopri cosa dicono le AI del tuo brand</title>
+    <meta
+      name="description"
+      content="aivis misura la tua visibilità dentro le risposte dell'AI. 500 prompt reali su ChatGPT, Gemini e Claude: scopri quando ti citano, quando ti ignorano."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Layer di sfondo globale: unico elemento che cross-fade tra le scene -->
+    <div class="bg-layer" data-bg aria-hidden="true"></div>
+
+    <!-- Trama di punti tecnica: visibile solo sulle scene scure -->
+    <div class="dotfield" data-dotfield aria-hidden="true"></div>
+    <!-- Spotlight lime che segue il cursore e "accende" la griglia -->
+    <div class="cursor-glow" data-cursor-glow aria-hidden="true"></div>
+
+    <!-- Navbar minimale: nascosta, appare dopo la scena 3 -->
+    <header class="navbar" data-navbar>
+      <a class="navbar__brand" href="#top">aivis</a>
+      <a class="navbar__cta" href="#cta">Analizza il tuo brand</a>
+    </header>
+
+    <!-- Progress indicator verticale sul lato destro -->
+    <div class="progress" data-progress aria-hidden="true">
+      <div class="progress__track">
+        <div class="progress__fill" data-progress-fill></div>
+      </div>
+    </div>
+
+    <main id="top">
+      <!-- SCENA 1 — La domanda -->
+      <section class="scene scene--light" id="scene-question" data-scene="1">
+        <div class="scene__pin" data-pin>
+          <!-- Frammenti di prompt reali che fluttuano sullo sfondo: uno dei 500 -->
+          <div class="prompts" data-prompts aria-hidden="true">
+            <span class="prompts__item" style="--x: 6%; --y: 16%">miglior software di fatturazione elettronica</span>
+            <span class="prompts__item" style="--x: 68%; --y: 10%">CRM per piccole imprese italiane</span>
+            <span class="prompts__item" style="--x: 78%; --y: 30%">gestionale magazzino in cloud</span>
+            <span class="prompts__item" style="--x: 2%; --y: 46%">tool per email marketing 2025</span>
+            <span class="prompts__item" style="--x: 72%; --y: 62%">app per firma digitale documenti</span>
+            <span class="prompts__item" style="--x: 10%; --y: 74%">software gestione turni personale</span>
+            <span class="prompts__item" style="--x: 60%; --y: 84%">piattaforma per corsi online</span>
+            <span class="prompts__item" style="--x: 20%; --y: 90%">antivirus aziendale consigliato</span>
+          </div>
+          <div class="question">
+            <span class="question__brand" data-question-brand>chatgpt</span>
+            <div class="chat" data-chat>
+            <div class="chat__bar" aria-hidden="true">
+              <span class="chat__dot"></span>
+              <span class="chat__dot"></span>
+              <span class="chat__dot"></span>
+            </div>
+            <div class="chat__body">
+              <div class="chat__msg chat__msg--user" data-chat-question>
+                <span class="chat__text" data-typed></span><span class="chat__caret" data-caret></span>
+              </div>
+
+              <!-- SCENA 2 — La risposta (riga per riga) -->
+              <div class="chat__msg chat__msg--ai" data-chat-answer>
+                <span class="chat__label">risposta</span>
+                <ol class="chat__list" data-answer-list>
+                  <li data-answer-item>Competitor 1</li>
+                  <li data-answer-item>Competitor 2</li>
+                  <li data-answer-item>Competitor 3</li>
+                  <li data-answer-item>Competitor 4</li>
+                  <li data-answer-item>Competitor 5</li>
+                  <li class="chat__list-empty" data-answer-empty>
+                    <span class="chat__caret chat__caret--still"></span>
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCENA 3 — L'assenza -->
+      <section class="scene scene--dark" id="scene-absence" data-scene="3">
+        <div class="scene__pin" data-pin>
+          <div class="absence" data-absence>
+            <h2 class="absence__title" data-absence-title>Il tuo brand non c'era.</h2>
+            <p class="absence__sub" data-absence-sub>E nessuno te l'ha detto.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCENA 4 — Il nuovo funnel -->
+      <section class="scene scene--dark" id="scene-funnel" data-scene="4">
+        <div class="scene__pin" data-pin>
+          <div class="funnel">
+            <div class="funnel__stage" data-funnel-stage>
+              <span class="engine-label engine-label--google" data-engine-google>google</span>
+              <span class="engine-label engine-label--ai" data-engine-ai>chatgpt</span>
+              <ul class="serp" data-serp aria-hidden="true">
+                <li class="serp__item" data-serp-item><span class="serp__title"></span><span class="serp__url"></span></li>
+                <li class="serp__item" data-serp-item><span class="serp__title"></span><span class="serp__url"></span></li>
+                <li class="serp__item" data-serp-item><span class="serp__title"></span><span class="serp__url"></span></li>
+                <li class="serp__item" data-serp-item><span class="serp__title"></span><span class="serp__url"></span></li>
+                <li class="serp__item" data-serp-item><span class="serp__title"></span><span class="serp__url"></span></li>
+                <li class="serp__item" data-serp-item><span class="serp__title"></span><span class="serp__url"></span></li>
+                <li class="serp__item" data-serp-item><span class="serp__title"></span><span class="serp__url"></span></li>
+                <li class="serp__item" data-serp-item><span class="serp__title"></span><span class="serp__url"></span></li>
+                <li class="serp__item" data-serp-item><span class="serp__title"></span><span class="serp__url"></span></li>
+                <li class="serp__item" data-serp-item><span class="serp__title"></span><span class="serp__url"></span></li>
+              </ul>
+              <div class="bubble" data-bubble aria-hidden="true">
+                <span class="bubble__line"></span>
+                <span class="bubble__line"></span>
+                <span class="bubble__line"></span>
+              </div>
+            </div>
+            <div class="funnel__copy" data-funnel-copy>
+              <p class="funnel__lead" data-funnel-serp-copy>Non ci sono più 10 posizioni.</p>
+              <div class="funnel__copy-bubble" data-funnel-bubble-copy>
+                <p class="funnel__lead">C'è una risposta sola.</p>
+                <p class="funnel__accent">O ci sei, o non esisti.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCENA 5 — La misura -->
+      <section class="scene scene--dark" id="scene-measure" data-scene="5">
+        <div class="scene__pin" data-pin>
+          <div class="measure">
+            <div class="measure__intro">
+              <span class="measure__wordmark" data-measure-wordmark>aivis</span>
+              <p class="measure__lead">Come misuriamo davvero la tua visibilità nelle risposte dell'AI.</p>
+            </div>
+            <ol class="steps">
+              <li class="step" data-step>
+                <span class="step__num">01</span>
+                <p class="step__text">500 prompt reali d'acquisto</p>
+              </li>
+              <li class="step" data-step>
+                <span class="step__num">02</span>
+                <p class="step__text">eseguiti su ChatGPT, Gemini e Claude, più volte</p>
+              </li>
+              <li class="step" data-step>
+                <span class="step__num">03</span>
+                <p class="step__text">
+                  ogni risposta analizzata: chi viene citato, chi viene consigliato, chi viene ignorato
+                </p>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCENA 6 — I numeri -->
+      <section class="scene scene--dark" id="scene-numbers" data-scene="6">
+        <div class="scene__pin" data-pin>
+          <div class="kpis" data-kpis>
+            <figure class="kpi" data-kpi data-from="0" data-to="44" data-suffix="%">
+              <span class="kpi__value" data-kpi-value>0%</span>
+              <figcaption class="kpi__caption">share of voice — quante volte le AI ti citano</figcaption>
+            </figure>
+            <figure class="kpi" data-kpi data-from="0" data-to="3.5" data-decimals="1">
+              <span class="kpi__value" data-kpi-value>0,0</span>
+              <figcaption class="kpi__caption">posizione media — quando ti citano, sei terzo o quarto</figcaption>
+            </figure>
+            <figure class="kpi" data-kpi data-from="0" data-to="9" data-suffix=" su 50">
+              <span class="kpi__value" data-kpi-value>0 su 50</span>
+              <figcaption class="kpi__caption">le domande in cui non esisti proprio</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCENA 7 — Il dopo -->
+      <section class="scene scene--lime" id="scene-after" data-scene="7">
+        <div class="scene__pin" data-pin>
+          <div class="after">
+            <span class="after__brand" data-after-brand>aivis</span>
+            <div class="kpis kpis--after" data-kpis-after>
+              <figure class="kpi" data-kpi-after data-from="44" data-to="83" data-suffix="%">
+                <span class="kpi__value" data-kpi-value>44%</span>
+                <figcaption class="kpi__caption">share of voice</figcaption>
+              </figure>
+              <figure class="kpi" data-kpi-after data-from="3.5" data-to="1.7" data-decimals="1">
+                <span class="kpi__value" data-kpi-value>3,5</span>
+                <figcaption class="kpi__caption">posizione media</figcaption>
+              </figure>
+              <figure class="kpi" data-kpi-after data-from="9" data-to="2" data-suffix=" su 50">
+                <span class="kpi__value" data-kpi-value>9 su 50</span>
+                <figcaption class="kpi__caption">domande in cui non esisti</figcaption>
+              </figure>
+            </div>
+            <p class="after__line" data-after-line>
+              Questo è quello che succede quando sai dove intervenire.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCENA 8 — CTA -->
+      <section class="scene scene--dark scene--tall" id="cta" data-scene="8">
+        <div class="cta">
+          <h2 class="cta__title">Scopri cosa dicono le AI del tuo brand.</h2>
+          <form class="cta__form" data-cta-form novalidate>
+            <input
+              class="cta__input"
+              type="email"
+              name="email"
+              placeholder="nome@azienda.com"
+              aria-label="La tua email di lavoro"
+              required
+            />
+            <button class="cta__button" type="submit">Richiedi il report</button>
+          </form>
+          <p class="cta__note" data-cta-note>Report di esempio in 48h.</p>
+          <footer class="footer">
+            aivis · un prodotto Orion Primis · <a href="#top">privacy</a>
+          </footer>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

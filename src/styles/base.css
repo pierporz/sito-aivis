@@ -1,0 +1,229 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+/* Scroll nativo: nessun hijack. Solo lo sfondo di base è nero per il fuori-scena. */
+body {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  color: var(--c-white);
+  background: var(--c-black);
+  overflow-x: hidden;
+}
+
+/* Layer di sfondo globale: fisso, sotto a tutto, unico a cambiare colore */
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-color: var(--bg-current);
+  will-change: background-color;
+}
+
+/* Trama di punti: fissa, dietro al contenuto, sfuma verso i bordi. Appare solo
+   quando il contesto è scuro (scene 3-4-5-6-8) per dare texture al nero vuoto. */
+.dotfield {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(237, 237, 237, 0.07) 1px, transparent 1.6px);
+  background-size: 38px 38px;
+  opacity: 0;
+  transition: opacity 0.7s var(--ease-out);
+  -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 45%, #000 30%, transparent 100%);
+  mask-image: radial-gradient(ellipse 90% 80% at 50% 45%, #000 30%, transparent 100%);
+}
+.ctx-dark .dotfield {
+  opacity: 1;
+}
+/* Sulla scena lime una griglia scura leggerissima */
+.ctx-lime .dotfield {
+  opacity: 1;
+  background-image: radial-gradient(circle, rgba(10, 10, 11, 0.08) 1px, transparent 1.6px);
+}
+
+/* Spotlight lime: stessa griglia, ma accesa solo intorno al cursore.
+   La posizione (--mx/--my) è aggiornata via JS; allineata alla .dotfield. */
+.cursor-glow {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(200, 245, 66, 0.85) 1.3px, transparent 2px);
+  background-size: 38px 38px;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-out);
+  -webkit-mask-image: radial-gradient(300px circle at var(--mx, -200px) var(--my, -200px), #000 0%, rgba(0, 0, 0, 0.35) 45%, transparent 72%);
+  mask-image: radial-gradient(300px circle at var(--mx, -200px) var(--my, -200px), #000 0%, rgba(0, 0, 0, 0.35) 45%, transparent 72%);
+}
+.ctx-dark .cursor-glow {
+  opacity: 1;
+}
+
+a {
+  color: inherit;
+}
+
+main {
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Struttura scena --- */
+.scene {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Il contenuto pinnato riempie il viewport e viene "fermato" da ScrollTrigger */
+.scene__pin {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-page);
+}
+
+.scene--tall {
+  min-height: 100vh;
+}
+
+/* Colori testo per contesto scena (lo sfondo lo gestisce il bg-layer) */
+.scene--light {
+  color: var(--c-ink);
+}
+.scene--dark {
+  color: var(--c-white);
+}
+.scene--lime {
+  color: var(--c-black);
+}
+
+/* --- Navbar --- */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem var(--space-page);
+  opacity: 0;
+  transform: translateY(-100%);
+  pointer-events: none;
+}
+.navbar.is-visible {
+  pointer-events: auto;
+}
+.navbar__brand {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: clamp(1.4rem, 1.2rem + 0.7vw, 1.85rem);
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  color: var(--c-white);
+}
+.navbar__cta {
+  font-family: var(--font-mono);
+  font-size: clamp(0.9rem, 0.8rem + 0.35vw, 1.15rem);
+  text-decoration: none;
+  color: var(--c-black);
+  background: var(--c-lime);
+  padding: 0.6rem 1.1rem;
+  border-radius: var(--radius);
+  transition: transform 0.2s var(--ease-out), background-color 0.4s var(--ease-out),
+    color 0.4s var(--ease-out);
+}
+.navbar__cta:hover {
+  transform: translateY(-1px);
+}
+
+/* Contesto lime (scena 7): la navbar inverte i colori per restare leggibile */
+.ctx-lime .navbar__brand {
+  color: var(--c-black);
+}
+.ctx-lime .navbar__cta {
+  background: var(--c-black);
+  color: var(--c-lime);
+}
+
+/* --- Progress indicator --- */
+.progress {
+  position: fixed;
+  top: 50%;
+  right: clamp(0.6rem, 1.5vw, 1.5rem);
+  transform: translateY(-50%);
+  z-index: 40;
+}
+.progress__track {
+  width: 2px;
+  height: clamp(90px, 22vh, 200px);
+  background: rgba(180, 180, 190, 0.25);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress__fill {
+  width: 100%;
+  height: 100%;
+  background: var(--c-white);
+  transform: scaleY(0);
+  transform-origin: top;
+  will-change: transform;
+  transition: background-color 0.4s var(--ease-out);
+}
+
+/* Contrasto del progress per contesto di sfondo */
+.ctx-light .progress__track {
+  background: rgba(30, 30, 32, 0.18);
+}
+.ctx-light .progress__fill,
+.ctx-lime .progress__fill {
+  background: var(--c-black);
+}
+.ctx-lime .progress__track {
+  background: rgba(10, 10, 11, 0.22);
+}
+
+/* Rispetta chi non vuole animazioni: scene statiche, ognuna col proprio sfondo.
+   Il crossfade globale è disattivato, quindi lo sfondo per scena va esplicitato. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .bg-layer {
+    display: none;
+  }
+  .scene--light {
+    background: var(--c-light);
+  }
+  .scene--dark {
+    background: var(--c-black);
+  }
+  .scene--lime {
+    background: var(--c-lime);
+  }
+  .navbar {
+    mix-blend-mode: normal;
+  }
+  .progress {
+    display: none;
+  }
+  .prompts__item {
+    animation: none;
+  }
+}

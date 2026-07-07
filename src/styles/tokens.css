@@ -1,0 +1,48 @@
+:root {
+  /* --- Colori --- */
+  --c-black: #0a0a0b;
+  --c-white: #ededed;
+  --c-light: #f5f5f2;
+  --c-lime: #c8f542;
+
+  /* Grigi freddi per il secondario */
+  --c-gray-900: #131316;
+  --c-gray-800: #18181b;
+  --c-gray-700: #232326;
+  --c-gray-500: #6b6b73;
+  --c-gray-400: #8a8a93;
+  --c-gray-300: #a8a8b0;
+
+  /* Testo su fondo chiaro (scene 1-2) */
+  --c-ink: #1a1a1c;
+  --c-ink-soft: #55555c;
+
+  /* Accento SERP scena 4 (blu link, usato solo come "prima" da collassare) */
+  --c-serp: #6d8fff;
+
+  --border: 1px solid var(--c-gray-700);
+  --radius: 7px;
+  --radius-lg: 10px;
+
+  /* --- Tipografia --- */
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Fluid type scale (clamp: min, preferito viewport, max) */
+  --fs-caption: clamp(0.72rem, 0.68rem + 0.2vw, 0.82rem);
+  --fs-body: clamp(1rem, 0.95rem + 0.4vw, 1.2rem);
+  --fs-lead: clamp(1.4rem, 1.1rem + 1.6vw, 2.4rem);
+  --fs-h2: clamp(2.6rem, 1.4rem + 6vw, 7rem);
+  --fs-kpi: clamp(4rem, 2rem + 14vw, 16rem);
+  --fs-mega: clamp(3rem, 1.6rem + 7vw, 9rem);
+
+  /* --- Spazi --- */
+  --space-page: clamp(1.25rem, 5vw, 6rem);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* --- Sfondo globale corrente (guidato via JS) --- */
+  --bg-current: var(--c-light);
+
+  color-scheme: dark;
+}

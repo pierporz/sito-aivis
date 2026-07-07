@@ -1,0 +1,26 @@
+services:
+  web:
+    build: .
+    container_name: aivis-web
+    command: npm run dev -- --host 0.0.0.0
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      # Preserva node_modules del container: non sovrascriverlo con quello dell'host
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+
+  # Versione di produzione: build statica servita da vite preview
+  preview:
+    build: .
+    container_name: aivis-preview
+    command: sh -c "npm run build && npm run preview -- --host 0.0.0.0"
+    ports:
+      - "4173:4173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    profiles:
+      - prod

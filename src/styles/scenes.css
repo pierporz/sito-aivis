@@ -1,0 +1,630 @@
+/* ============================================================
+   SCENA 1 + 2 — Chat: la domanda e la risposta
+   ============================================================ */
+/* Wordmark "aivis" subito sopra il box del prompt */
+.question {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(1rem, 2.4vw, 1.8rem);
+}
+.question__brand {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: clamp(1.6rem, 1.1rem + 1.6vw, 2.6rem);
+  letter-spacing: -0.03em;
+  color: var(--c-ink);
+}
+
+/* Frammenti di prompt che riempiono lo sfondo chiaro con lenta deriva */
+.prompts {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.prompts__item {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  font-family: var(--font-mono);
+  font-size: clamp(0.72rem, 0.6rem + 0.5vw, 0.95rem);
+  letter-spacing: -0.01em;
+  color: rgba(26, 26, 28, 0.16);
+  white-space: nowrap;
+  will-change: transform, opacity;
+  animation: prompt-float 9s ease-in-out infinite;
+}
+.prompts__item::before {
+  content: "→ ";
+  color: rgba(26, 26, 28, 0.22);
+}
+.prompts__item:nth-child(2n) {
+  animation-duration: 11s;
+  animation-delay: -3s;
+}
+.prompts__item:nth-child(3n) {
+  animation-duration: 13s;
+  animation-delay: -6s;
+}
+@keyframes prompt-float {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(0, -14px);
+    opacity: 1;
+  }
+}
+
+.chat {
+  position: relative;
+  width: min(640px, 92vw);
+  background: #ffffff;
+  border: 1px solid #e2e2dc;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 30px 80px -34px rgba(20, 20, 20, 0.3);
+  overflow: hidden;
+  transform-origin: center center;
+}
+.chat__bar {
+  display: flex;
+  gap: 7px;
+  padding: 13px 16px;
+  border-bottom: 1px solid #ececec;
+}
+.chat__dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #dcdcd6;
+}
+.chat__body {
+  padding: clamp(1.1rem, 3vw, 1.8rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+.chat__msg {
+  font-size: clamp(1rem, 0.9rem + 0.6vw, 1.35rem);
+  line-height: 1.45;
+}
+.chat__msg--user {
+  color: var(--c-ink);
+  font-weight: 500;
+}
+.chat__caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 2px;
+  background: var(--c-ink);
+  vertical-align: -0.15em;
+  animation: caret-blink 1.05s step-end infinite;
+}
+.chat__caret--still {
+  animation: none;
+  opacity: 0.9;
+}
+@keyframes caret-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Risposta AI: nascosta finché la scena 2 non la rivela */
+.chat__msg--ai {
+  border-top: 1px solid #efefe9;
+  padding-top: 1.1rem;
+}
+.chat__label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-ink-soft);
+  margin-bottom: 0.7rem;
+}
+.chat__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.chat__list li {
+  color: var(--c-ink);
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(6px);
+}
+.chat__list li::before {
+  content: counter(item) ".";
+  counter-increment: item;
+  font-family: var(--font-mono);
+  color: var(--c-ink-soft);
+  margin-right: 0.6rem;
+}
+.chat__list {
+  counter-reset: item;
+}
+.chat__list-empty {
+  min-height: 1.4em;
+}
+.chat__list-empty::before {
+  content: "6.";
+}
+
+/* ============================================================
+   SCENA 3 — L'assenza
+   ============================================================ */
+.absence {
+  width: min(1180px, 92vw);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.absence__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(3rem, 1.4rem + 7.5vw, 8.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+  color: var(--c-white);
+  text-align: left;
+  max-width: 15ch;
+}
+.absence__sub {
+  align-self: flex-end;
+  margin-top: clamp(1.2rem, 3vw, 2.4rem);
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: var(--fs-lead);
+  color: var(--c-lime);
+  letter-spacing: -0.01em;
+}
+
+/* ============================================================
+   SCENA 4 — Il nuovo funnel: 10 SERP che collassano in 1 bolla
+   ============================================================ */
+.funnel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(2rem, 6vw, 6rem);
+  align-items: center;
+  width: min(1100px, 100%);
+}
+.funnel__stage {
+  position: relative;
+  height: clamp(320px, 60vh, 560px);
+}
+/* Etichetta sorgente sopra la simulazione (google / chatgpt) */
+.engine-label {
+  position: absolute;
+  top: -2.9rem;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: clamp(1rem, 0.85rem + 0.5vw, 1.35rem);
+  letter-spacing: 0.04em;
+  color: var(--c-gray-300);
+  opacity: 0;
+}
+.engine-label::before {
+  content: "";
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--dot, var(--c-gray-400));
+}
+.engine-label--google {
+  --dot: var(--c-serp);
+}
+/* "chatgpt" centrata appena sopra la bolla (che è al centro dello stage) */
+.engine-label--ai {
+  --dot: var(--c-lime);
+  top: calc(50% - clamp(60px, 9vw, 85px) - 2.2rem);
+  left: 50%;
+  transform: translateX(-50%);
+}
+.serp {
+  list-style: none;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.1rem;
+}
+.serp__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transform-origin: left center;
+  will-change: transform, opacity;
+}
+.serp__title {
+  display: block;
+  width: 68%;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--c-serp);
+  opacity: 0.85;
+}
+.serp__url {
+  display: block;
+  width: 40%;
+  height: 8px;
+  border-radius: 3px;
+  background: var(--c-gray-500);
+}
+.bubble {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: clamp(180px, 26vw, 260px);
+  height: clamp(120px, 18vw, 170px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.85rem;
+  padding: 1.4rem;
+  background: var(--c-gray-900);
+  border: 1px solid var(--c-lime);
+  border-radius: var(--radius-lg);
+  opacity: 0;
+  transform: scale(0.7);
+  will-change: transform, opacity;
+}
+.bubble__line {
+  height: 10px;
+  border-radius: 3px;
+  background: var(--c-white);
+  opacity: 0.85;
+}
+.bubble__line:nth-child(1) {
+  width: 92%;
+}
+.bubble__line:nth-child(2) {
+  width: 100%;
+}
+.bubble__line:nth-child(3) {
+  width: 64%;
+  background: var(--c-lime);
+}
+.funnel__copy {
+  max-width: 26ch;
+  display: grid;
+  gap: 1.2rem;
+}
+/* In sequenza (desktop): i due gruppi di testo si sovrappongono nella stessa
+   area, così "Non ci sono più 10 posizioni" e la seconda dicitura si alternano */
+.funnel__copy.is-stacked > * {
+  grid-area: 1 / 1;
+}
+.funnel__copy-bubble {
+  display: grid;
+  gap: 1.2rem;
+}
+.funnel__lead {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--fs-lead);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--c-white);
+}
+.funnel__accent {
+  margin-top: 1.2rem;
+  font-family: var(--font-mono);
+  font-size: var(--fs-lead);
+  color: var(--c-lime);
+  letter-spacing: -0.01em;
+}
+
+/* ============================================================
+   SCENA 5 — La misura: wordmark + 3 step
+   ============================================================ */
+.measure {
+  width: min(1180px, 92vw);
+  display: grid;
+  grid-template-columns: minmax(240px, 0.85fr) 1.15fr;
+  gap: clamp(2rem, 6vw, 6rem);
+  align-items: center;
+}
+.measure__intro {
+  align-self: center;
+}
+.measure__wordmark {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: var(--fs-mega);
+  letter-spacing: -0.03em;
+  color: var(--c-white);
+  display: block;
+}
+.measure__lead {
+  margin-top: 1.4rem;
+  max-width: 22ch;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.4;
+  color: var(--c-gray-300);
+}
+.steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.2rem, 3.5vh, 2.4rem);
+  text-align: left;
+}
+.step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: clamp(1rem, 3vw, 2rem);
+  align-items: baseline;
+  padding-bottom: clamp(1.4rem, 4vh, 2.6rem);
+  border-bottom: var(--border);
+}
+.step:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.step__num {
+  font-family: var(--font-mono);
+  font-size: clamp(1rem, 0.9rem + 0.6vw, 1.4rem);
+  color: var(--c-lime);
+}
+.step__text {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--fs-lead);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--c-white);
+}
+
+/* ============================================================
+   SCENA 6 + 7 — KPI giganti
+   ============================================================ */
+.kpis {
+  width: 100%;
+  max-width: 1100px;
+  text-align: center;
+}
+.kpi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+.kpi__value {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: var(--fs-kpi);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-white);
+  white-space: nowrap;
+}
+/* Unità testuale (es. "su 50") in scala ridotta per non mandare a capo il numero */
+.kpi__unit {
+  font-size: 0.36em;
+  font-weight: 500;
+  letter-spacing: 0;
+  margin-left: 0.3em;
+  color: var(--c-gray-400);
+}
+.kpi__caption {
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.02em;
+  color: var(--c-gray-300);
+  max-width: 34ch;
+}
+
+/* Scena 6: i tre KPI sulla stessa schermata, in riga, che crescono insieme
+   (stesso impianto della scena 7 lime, così il "prima/dopo" è coerente) */
+#scene-numbers .kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(1.5rem, 5vw, 4rem);
+  align-items: end;
+  width: min(1200px, 92vw);
+  margin: 0 auto;
+}
+#scene-numbers .kpi__value {
+  font-size: clamp(3rem, 1.5rem + 9.5vw, 9.5rem);
+}
+
+/* Scena 7: griglia orizzontale dei tre KPI migliorati, testo nero su lime */
+.after {
+  width: min(1200px, 100%);
+  text-align: center;
+}
+/* Etichetta "aivis" sopra i numeri migliorati */
+.after__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: clamp(1.2rem, 3.5vh, 2.4rem);
+  font-family: var(--font-mono);
+  font-size: clamp(1.1rem, 0.9rem + 0.6vw, 1.5rem);
+  letter-spacing: 0.03em;
+  color: var(--c-black);
+}
+.after__brand::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--c-black);
+}
+.kpis--after {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(1.5rem, 5vw, 4rem);
+  align-items: end;
+}
+.kpis--after .kpi__value {
+  font-size: clamp(3rem, 1.5rem + 9.5vw, 9.5rem);
+  color: var(--c-black);
+}
+.kpis--after .kpi__unit {
+  color: rgba(10, 10, 11, 0.6);
+}
+.kpis--after .kpi__caption {
+  color: rgba(10, 10, 11, 0.72);
+}
+.after__line {
+  margin-top: clamp(2rem, 6vh, 4rem);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--fs-lead);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--c-black);
+  max-width: 24ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ============================================================
+   SCENA 8 — CTA
+   ============================================================ */
+.cta {
+  width: min(680px, 92vw);
+  margin: 0 auto;
+  padding: clamp(4rem, 12vh, 9rem) var(--space-page);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.cta__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2rem, 1.2rem + 4vw, 4.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  color: var(--c-white);
+  max-width: 16ch;
+}
+.cta__form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: clamp(2rem, 6vh, 3.5rem);
+  width: min(480px, 100%);
+  flex-wrap: wrap;
+}
+.cta__input {
+  flex: 1 1 240px;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--c-white);
+  background: var(--c-gray-900);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  outline: none;
+  transition: border-color 0.2s var(--ease-out);
+}
+.cta__input::placeholder {
+  color: var(--c-gray-500);
+}
+.cta__input:focus-visible {
+  border-color: var(--c-lime);
+}
+.cta__input.is-invalid {
+  border-color: #ff6b6b;
+}
+.cta__button {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--c-black);
+  background: var(--c-lime);
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.85rem 1.4rem;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease-out), filter 0.15s var(--ease-out);
+}
+.cta__button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+.cta__button:active {
+  transform: translateY(0);
+}
+.cta__note {
+  margin-top: 1.1rem;
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  color: var(--c-gray-400);
+}
+.cta__note.is-success {
+  color: var(--c-lime);
+}
+.footer {
+  margin-top: clamp(4rem, 14vh, 8rem);
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  color: var(--c-gray-500);
+}
+.footer a {
+  color: var(--c-gray-400);
+  text-decoration: none;
+  border-bottom: 1px solid var(--c-gray-700);
+}
+
+/* ============================================================
+   RESPONSIVE < 768px — scene semplificate
+   ============================================================ */
+@media (max-width: 767px) {
+  .funnel {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    text-align: center;
+  }
+  .funnel__stage {
+    height: clamp(260px, 44vh, 340px);
+  }
+  .funnel__copy {
+    max-width: none;
+  }
+  .kpis--after {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  .measure {
+    grid-template-columns: 1fr;
+    gap: 1.8rem;
+  }
+  .measure__lead {
+    max-width: none;
+  }
+  #scene-numbers .kpis {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  .absence__title {
+    max-width: none;
+  }
+  .cta__form {
+    flex-direction: column;
+  }
+  .cta__button {
+    width: 100%;
+  }
+}
