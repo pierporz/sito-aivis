@@ -1,0 +1,845 @@
+/* =============================================================================
+   IL FUNNEL INVISIBILE — design system evolutivo 2005 → 2026
+   Un'unica variabile --e (0 = era 2005, 1 = era 2026) fa il morphing continuo di
+   sfondo, inchiostro, accento, raggi e densità. Lo scroll la scruba nella scena 3.
+   ============================================================================= */
+
+:root {
+  /* Progresso d'epoca: 0 = pieno 2005, 1 = pieno 2026. Scrubata dallo scroll. */
+  --e: 0;
+
+  /* --- Poli cromatici --- */
+  --c-2005-bg: #ffffff;
+  --c-2005-ink: #000000;
+  --c-2005-ink-soft: #444444;
+  --c-2005-link: #1a0dab; /* blu link classico */
+  --c-2005-visited: #660099; /* viola visitato */
+  --c-2005-url: #067903; /* verde URL */
+  --c-2005-line: #d9d9d9;
+
+  --c-2026-bg: #f7f4ee; /* avorio caldo */
+  --c-2026-ink: #1f1d1a; /* inchiostro morbido */
+  --c-2026-ink-soft: #6f695f;
+  --c-2026-accent: #d9603b; /* terracotta */
+  --c-2026-line: #e4ddd0;
+
+  /* --- Valori morphati (color-mix con --e come percentuale) --- */
+  --bg: color-mix(in oklab, var(--c-2005-bg), var(--c-2026-bg) calc(var(--e) * 100%));
+  --ink: color-mix(in oklab, var(--c-2005-ink), var(--c-2026-ink) calc(var(--e) * 100%));
+  --ink-soft: color-mix(in oklab, var(--c-2005-ink-soft), var(--c-2026-ink-soft) calc(var(--e) * 100%));
+  --accent: color-mix(in oklab, var(--c-2005-link), var(--c-2026-accent) calc(var(--e) * 100%));
+  --line: color-mix(in oklab, var(--c-2005-line), var(--c-2026-line) calc(var(--e) * 100%));
+
+  /* Geometria: da spigoli vivi (0px) ad angoli morbidi (20px) */
+  --radius: calc(var(--e) * 20px);
+  --radius-lg: calc(var(--e) * 28px);
+
+  /* Densità: da compressa (2005) ad ariosa (2026) */
+  --leading: calc(1.35 + var(--e) * 0.35);
+
+  /* --- Font per era (lo switch di famiglia è guidato da classi sul <body>) --- */
+  --font-2005: Georgia, "Times New Roman", Times, serif;
+  --font-sans: "Instrument Sans", system-ui, -apple-system, sans-serif;
+  --font-news: "Newsreader", Georgia, serif;
+
+  /* --- Type scale fluida --- */
+  --fs-body: clamp(0.95rem, 0.9rem + 0.3vw, 1.1rem);
+  --fs-lead: clamp(1.6rem, 1.1rem + 2.2vw, 3.2rem);
+  --fs-caption: clamp(1.1rem, 0.9rem + 1vw, 1.7rem);
+  --fs-mega: clamp(2.6rem, 1.4rem + 5.5vw, 6.5rem);
+  --fs-metric: clamp(3rem, 1.6rem + 7vw, 8rem);
+
+  --space-page: clamp(1.25rem, 5vw, 6rem);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-2005);
+  font-size: var(--fs-body);
+  line-height: var(--leading);
+  color: var(--ink);
+  background: var(--c-2005-bg);
+  overflow-x: hidden;
+  transition: font-family 0s; /* la famiglia cambia netta al confine di scena */
+}
+
+/* Famiglie tipografiche per era (switch discreto, il resto morpha in continuo) */
+body.era-past {
+  font-family: var(--font-2005);
+}
+body.era-shift,
+body.era-now {
+  font-family: var(--font-sans);
+}
+
+a {
+  color: inherit;
+}
+
+/* Sfondo globale morphante: un solo layer fisso sotto a tutto */
+.paper {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-color: var(--bg);
+  will-change: background-color;
+}
+
+/* --- Progress bar orizzontale in alto --- */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 60;
+  background: color-mix(in oklab, var(--line), transparent 30%);
+}
+.topbar__fill {
+  height: 100%;
+  width: 100%;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform;
+}
+
+/* --- Wordmark fisso (compare nell'era moderna) --- */
+.mark {
+  position: fixed;
+  top: clamp(1rem, 2.4vh, 1.9rem);
+  left: var(--space-page);
+  z-index: 50;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: clamp(1.2rem, 1rem + 0.6vw, 1.5rem);
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  text-decoration: none;
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+}
+.mark.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+main {
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Struttura scena --- */
+.s {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+}
+.s__pin {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(4rem, 10vh, 7rem) var(--space-page) clamp(2rem, 6vh, 4rem);
+}
+
+/* Didascalie condivise */
+.caption {
+  color: var(--ink-soft);
+  max-width: 30ch;
+}
+.caption--serif {
+  font-family: var(--font-2005);
+  font-style: italic;
+  font-size: var(--fs-caption);
+  line-height: 1.4;
+}
+.caption--news {
+  font-family: var(--font-news);
+  font-style: italic;
+  font-weight: 400;
+  font-size: var(--fs-caption);
+  line-height: 1.35;
+  color: var(--ink);
+  max-width: 22ch;
+}
+
+/* =============================================================================
+   SCENA 1 — 2005: la SERP
+   ============================================================================= */
+.serp2005 {
+  width: min(760px, 100%);
+}
+.serp2005__head {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+.engine {
+  font-family: var(--font-2005);
+  font-weight: 700;
+  font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.4rem);
+  color: var(--c-2005-link);
+  letter-spacing: -0.01em;
+}
+.engine__it {
+  color: var(--c-2005-url);
+}
+.searchbox {
+  display: flex;
+  flex: 1 1 320px;
+  min-width: 220px;
+  border: 1px solid #7b7b7b;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #fff;
+  box-shadow: inset 1px 1px 0 #e7e7e7;
+}
+.searchbox__field {
+  flex: 1;
+  border: 0;
+  outline: 0;
+  padding: 0.4rem 0.6rem;
+  font-family: var(--font-2005);
+  font-size: 0.95rem;
+  color: #000;
+  background: transparent;
+}
+.searchbox__btn {
+  border: 0;
+  border-left: 1px solid #cfcfcf;
+  /* Bottone beveled old-school */
+  background: linear-gradient(#fdfdfd, #e2e2e2);
+  padding: 0 0.75rem;
+  cursor: pointer;
+}
+.searchbox__lens {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #555;
+  border-radius: 50%;
+  position: relative;
+}
+.searchbox__lens::after {
+  content: "";
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 6px;
+  height: 2px;
+  background: #555;
+  transform: rotate(45deg);
+}
+.serp2005__stats {
+  font-family: var(--font-2005);
+  font-size: 0.8rem;
+  color: var(--c-2005-ink-soft);
+  border-bottom: 1px solid var(--c-2005-line);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+.results {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.result {
+  font-family: var(--font-2005);
+}
+.result__title {
+  color: var(--c-2005-link);
+  text-decoration: underline;
+  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.2rem);
+  line-height: 1.25;
+}
+.result:nth-child(3) .result__title,
+.result:nth-child(6) .result__title {
+  color: var(--c-2005-visited); /* qualche link "visitato" viola */
+}
+.result__url {
+  display: block;
+  color: var(--c-2005-url);
+  font-size: 0.82rem;
+  margin: 0.1rem 0;
+}
+.result__snip {
+  color: #333;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+/* Easter egg: il decimo risultato è già dell'era 2026 */
+.result--future .result__title {
+  font-family: var(--font-sans);
+  color: var(--c-2026-accent);
+  font-weight: 600;
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+.result--future .result__url {
+  font-family: var(--font-sans);
+  color: color-mix(in oklab, var(--c-2026-accent), #000 15%);
+}
+.result--future .result__snip {
+  font-family: var(--font-sans);
+  color: var(--c-2026-ink-soft);
+}
+.serp2005 .caption {
+  margin-top: clamp(1.5rem, 4vh, 3rem);
+}
+
+/* =============================================================================
+   SCENA 2 — La gara (CTR)
+   ============================================================================= */
+.race {
+  width: min(720px, 100%);
+}
+.race__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+.race__row {
+  display: grid;
+  grid-template-columns: 2rem 1fr minmax(120px, 34%);
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.5rem;
+  border-bottom: 1px solid var(--c-2005-line);
+  font-family: var(--font-2005);
+  transition: background-color 0.3s var(--ease);
+}
+.race__row.is-active {
+  background: #f3f4ff;
+}
+.race__rank {
+  color: var(--c-2005-ink-soft);
+  font-size: 0.85rem;
+  text-align: right;
+}
+.race__link {
+  color: var(--c-2005-link);
+  text-decoration: underline;
+  font-size: clamp(0.9rem, 0.85rem + 0.3vw, 1.1rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.race__ctr {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.race__bar {
+  height: 10px;
+  flex: 1;
+  background: #e8e8e8;
+  position: relative;
+  border-radius: 1px;
+  overflow: hidden;
+}
+.race__bar::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--ctr) * 1% * 3.2);
+  max-width: 100%;
+  background: var(--c-2005-link);
+  transform: scaleX(var(--bar, 0));
+  transform-origin: left center;
+}
+.race__ctr b {
+  font-weight: 700;
+  font-size: 0.9rem;
+  min-width: 3ch;
+  text-align: right;
+  color: #000;
+}
+.race__caption {
+  margin-top: clamp(1.5rem, 4vh, 2.5rem);
+}
+
+/* =============================================================================
+   SCENA 3 — Qualcosa cambia (il morphing)
+   ============================================================================= */
+.shift {
+  width: min(760px, 100%);
+  position: relative;
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.shift__links {
+  list-style: none;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.7rem;
+  text-align: center;
+}
+.shift__links li {
+  color: var(--c-2005-link);
+  text-decoration: underline;
+  font-family: var(--font-2005);
+  font-size: clamp(1rem, 0.9rem + 0.5vw, 1.3rem);
+  will-change: transform, opacity, filter;
+}
+.shift__text {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 20ch;
+  font-family: var(--font-news);
+  font-size: var(--fs-lead);
+  line-height: 1.15;
+  color: var(--ink);
+  opacity: 0;
+}
+.shift__text em {
+  display: block;
+  font-style: italic;
+  color: var(--c-2026-accent);
+  margin-top: 0.3em;
+}
+
+/* =============================================================================
+   SCENA 4 — 2026: la risposta
+   ============================================================================= */
+.answer {
+  width: min(680px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(1.75rem, 5vh, 3rem);
+}
+.bubble2026 {
+  align-self: stretch;
+  background: color-mix(in oklab, var(--c-2026-bg), #fff 55%);
+  border: 1px solid var(--c-2026-line);
+  border-radius: var(--radius-lg);
+  padding: clamp(1.5rem, 4vw, 2.75rem);
+  box-shadow: 0 24px 60px -30px rgba(31, 29, 26, 0.28);
+}
+.bubble2026__from {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-2026-ink-soft);
+  margin-bottom: 0.9rem;
+}
+.bubble2026__text {
+  font-family: var(--font-sans);
+  font-size: clamp(1.2rem, 1rem + 1vw, 1.75rem);
+  line-height: 1.5;
+  color: var(--c-2026-ink);
+}
+.bubble2026__text mark {
+  background: none;
+  color: var(--c-2026-accent);
+  font-weight: 600;
+}
+/* Cursore "AI che sta scrivendo": barra verticale lampeggiante a fine testo */
+.type-caret {
+  display: inline-block;
+  width: 3px;
+  height: 1.05em;
+  margin-left: 1px;
+  vertical-align: -0.16em;
+  background: var(--c-2026-accent);
+  border-radius: 1px;
+  animation: type-blink 1.05s steps(1) infinite;
+}
+@keyframes type-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* =============================================================================
+   SCENA 5 — L'invisibile
+   ============================================================================= */
+.invisible {
+  width: min(760px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.75rem, 5vh, 3rem);
+}
+.invisible__stack {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.9rem, 2.5vh, 1.4rem);
+}
+.miniq {
+  background: color-mix(in oklab, var(--c-2026-bg), #fff 55%);
+  border: 1px solid var(--c-2026-line);
+  border-radius: var(--radius-lg);
+  padding: clamp(1.1rem, 3vw, 1.75rem);
+  font-family: var(--font-sans);
+}
+.miniq__q {
+  color: var(--c-2026-ink-soft);
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+.miniq__a {
+  color: var(--c-2026-ink);
+  font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.3rem);
+}
+.miniq__a mark {
+  background: none;
+  color: var(--c-2026-accent);
+  font-weight: 600;
+}
+.slot {
+  display: inline-block;
+  border: 1.5px dashed var(--c-2026-accent);
+  border-radius: 8px;
+  padding: 0.05em 0.6em;
+  color: transparent;
+  position: relative;
+  user-select: none;
+}
+.slot::after {
+  content: "?";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: color-mix(in oklab, var(--c-2026-accent), transparent 25%);
+  font-weight: 600;
+}
+
+/* =============================================================================
+   SCENA 6 — aivis: tre passaggi orizzontali
+   ============================================================================= */
+.aivis {
+  width: min(820px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(1.5rem, 4vh, 2.5rem);
+}
+.aivis__mark {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--fs-mega);
+  letter-spacing: -0.04em;
+  color: var(--c-2026-ink);
+  line-height: 0.9;
+}
+.aivis__mark::after {
+  content: ".";
+  color: var(--c-2026-accent);
+}
+.aivis__viewport {
+  width: 100%;
+  overflow: hidden;
+}
+.aivis__track {
+  display: flex;
+  width: 300%;
+}
+.pass {
+  width: calc(100% / 3);
+  flex: 0 0 auto;
+  padding: 0 clamp(0.5rem, 3vw, 2rem);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.25rem, 3.5vh, 2rem);
+}
+.pass__lead {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: var(--fs-lead);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--c-2026-ink);
+  max-width: 18ch;
+}
+.dtable {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+}
+.dtable tr {
+  border-top: 1px solid var(--c-2026-line);
+}
+.dtable tr:last-child {
+  border-bottom: 1px solid var(--c-2026-line);
+}
+.dtable th,
+.dtable td {
+  padding: 0.7rem 0.25rem;
+  text-align: left;
+  font-weight: 400;
+  font-size: clamp(0.9rem, 0.85rem + 0.3vw, 1.05rem);
+}
+.dtable th {
+  color: var(--c-2026-ink-soft);
+}
+.dtable td {
+  text-align: right;
+  color: var(--c-2026-ink);
+  font-weight: 500;
+}
+.dtable__you th,
+.dtable__you td {
+  color: var(--c-2026-accent);
+  font-weight: 600;
+}
+.aivis__dots {
+  display: flex;
+  gap: 0.5rem;
+}
+.aivis__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c-2026-line);
+  transition: background-color 0.3s var(--ease), transform 0.3s var(--ease);
+}
+.aivis__dot.is-active {
+  background: var(--c-2026-accent);
+  transform: scale(1.3);
+}
+
+/* =============================================================================
+   SCENA 7 — La prova (prima/dopo)
+   ============================================================================= */
+.proof {
+  width: min(900px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2rem, 6vh, 3.5rem);
+}
+.proof__grid {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.25rem, 4vh, 2.5rem);
+}
+.metric {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) 2fr;
+  align-items: center;
+  gap: clamp(1rem, 4vw, 3rem);
+  border-top: 1px solid var(--c-2026-line);
+  padding-top: clamp(1rem, 3vh, 1.75rem);
+}
+.metric__label {
+  font-family: var(--font-news);
+  font-style: italic;
+  font-size: clamp(1.1rem, 0.9rem + 0.8vw, 1.6rem);
+  color: var(--c-2026-ink-soft);
+}
+.metric__pair {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(0.75rem, 2.5vw, 1.75rem);
+  font-family: var(--font-sans);
+}
+.metric__from {
+  font-size: clamp(1.6rem, 1rem + 2vw, 2.6rem);
+  color: color-mix(in oklab, var(--c-2026-ink-soft), transparent 25%);
+  letter-spacing: -0.02em;
+}
+.metric__arrow {
+  color: var(--c-2026-accent);
+  font-size: clamp(1.2rem, 1rem + 1vw, 1.8rem);
+}
+.metric__to {
+  font-size: var(--fs-metric);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--c-2026-accent);
+  line-height: 1;
+}
+.metric__to .kpi__unit {
+  font-size: 0.32em;
+  font-weight: 500;
+  color: var(--c-2026-ink-soft);
+  margin-left: 0.35em;
+  letter-spacing: 0;
+}
+
+/* =============================================================================
+   SCENA 8 — CTA
+   ============================================================================= */
+.s--cta .s__pin,
+.cta2026 {
+  min-height: 100vh;
+}
+.cta2026 {
+  width: min(820px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: clamp(4rem, 12vh, 8rem) var(--space-page);
+  gap: clamp(1.5rem, 4vh, 2.5rem);
+}
+.cta2026__title {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--fs-mega);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--c-2026-ink);
+  max-width: 16ch;
+}
+.cta2026__title em {
+  display: block;
+  font-family: var(--font-news);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--c-2026-accent);
+}
+.cta2026__form {
+  display: flex;
+  gap: 0.6rem;
+  width: min(520px, 100%);
+  flex-wrap: wrap;
+}
+.cta2026__input {
+  flex: 1 1 220px;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  padding: 0.95rem 1.1rem;
+  border: 1px solid var(--c-2026-line);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--c-2026-bg), #fff 55%);
+  color: var(--c-2026-ink);
+  outline: none;
+  transition: border-color 0.25s var(--ease);
+}
+.cta2026__input::placeholder {
+  color: var(--c-2026-ink-soft);
+}
+.cta2026__input:focus {
+  border-color: var(--c-2026-accent);
+}
+.cta2026__input.is-invalid {
+  border-color: #c0392b;
+}
+.cta2026__btn {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0.95rem 1.6rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--c-2026-accent);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s var(--ease), background-color 0.2s var(--ease);
+}
+.cta2026__btn:hover {
+  transform: translateY(-1px);
+  background: color-mix(in oklab, var(--c-2026-accent), #000 10%);
+}
+.cta2026__note {
+  font-family: var(--font-news);
+  font-style: italic;
+  font-size: 1.15rem;
+  color: var(--c-2026-ink-soft);
+}
+.cta2026__note.is-success {
+  color: var(--c-2026-accent);
+  font-style: normal;
+  font-family: var(--font-sans);
+}
+.foot2026 {
+  margin-top: clamp(2rem, 6vh, 4rem);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--c-2026-ink-soft);
+}
+.foot2026 a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* =============================================================================
+   Mobile: colonna singola, niente pin (gestito in JS con revealOnEnter)
+   ============================================================================= */
+@media (max-width: 767px) {
+  .s__pin {
+    min-height: auto;
+    padding-top: clamp(3.5rem, 12vh, 6rem);
+    padding-bottom: clamp(3.5rem, 12vh, 6rem);
+  }
+  .metric {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+  /* Su mobile i tre passaggi si impilano invece di scorrere in orizzontale */
+  .aivis__track {
+    width: 100%;
+    flex-direction: column;
+    gap: clamp(2.5rem, 8vh, 4rem);
+  }
+  .pass {
+    width: 100%;
+    padding: 0;
+  }
+  .aivis__dots {
+    display: none;
+  }
+  .shift {
+    min-height: auto;
+  }
+  .shift__links {
+    position: static;
+    margin-bottom: 2rem;
+  }
+  .shift__text {
+    opacity: 1;
+  }
+}
+
+/* =============================================================================
+   prefers-reduced-motion: tutto statico e leggibile; niente scrub del morphing.
+   Ogni scena mostra il proprio stato d'epoca via --e impostata dal JS.
+   ============================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .topbar {
+    display: none;
+  }
+  .shift__text {
+    opacity: 1;
+  }
+  .type-caret {
+    display: none; /* niente cursore lampeggiante: testo statico e completo */
+  }
+}

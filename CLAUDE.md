@@ -82,6 +82,18 @@ Ogni scena è full-viewport, pinnata con ScrollTrigger; transizioni fluide legat
 - Tutto il copy in italiano
 - Codice organizzato: `src/scenes/` un modulo per scena, orchestrazione ScrollTrigger centralizzata in `src/lib/`
 
+## Seconda pagina — "Il funnel invisibile" (`/funnel.html`)
+
+Variante narrativa alternativa, **estetica completamente diversa** dalla home: nessun dark-mode, niente lime. Idea centrale: **il design stesso evolve dal web del 2005 all'interfaccia AI del 2026 mentre scorri**.
+
+- Vite è ora **multi-page**: `vite.config.ts` → `rollupOptions.input` con `main` (index.html) e `funnel` (funnel.html). Le due pagine sono indipendenti e coesistono.
+- Codice isolato in `src/funnel/` (non condivide CSS/scene con la home; riusa solo `qs/qsa/formatIt` e `revealOnEnter` da `src/lib/`).
+  - `main.ts` — entry; `orchestrator.ts` — matchMedia + progress bar orizzontale in alto; `era.ts` — IntersectionObserver che imposta la classe d'epoca sul body (font) e, su mobile/reduced, guida `--e`; `scenes.ts` — le 8 scene in un unico file; `styles.css` — tutti gli stili + i token evolutivi.
+- **Motore del morphing:** un'unica CSS custom property `--e` (0 = 2005, 1 = 2026). Tutti i colori sono `color-mix(in oklab, <2005>, <2026> calc(var(--e) * 100%))`; anche raggi e interlinea scalano con `--e`. Lo scroll **scruba `--e` dentro la timeline pinnata della scena 3** (come i crossfade della home); su mobile/reduced la guida `era.ts` via observer. Il font-family cambia netto al confine di scena (Georgia → Instrument Sans, con Newsreader italic per gli accenti).
+- Poli: **2005** bianco `#fff`, nero, link blu `#1a0dab` underline, viola visitato `#609`, verde URL, Georgia, spigoli vivi, searchbox beveled con lente. **2026** avorio `#f7f4ee`, inchiostro `#1f1d1a`, accento terracotta `#d9603b`, Instrument Sans + Newsreader, angoli 20px, bolla conversazionale.
+- Scene: 1 SERP 2005 (col **easter egg**: il 10° risultato "aivis" già in terracotta moderno) → 2 la gara (CTR decrescenti) → 3 il morphing (link che si fondono, `--e` 0→1) → 4 la risposta AI → 5 l'invisibile (3 bolle, slot tratteggiato al posto del brand) → 6 aivis (3 passaggi orizzontali con tabelle) → 7 prova prima/dopo (contatori) → 8 CTA.
+- Deploy: Cloudflare Pages builda `dist/` con entrambe le pagine, la seconda è raggiungibile a `/funnel`.
+
 ## Note per modifiche future
 
 - I KPI leggono `data-from` / `data-to` / `data-decimals` / `data-suffix` dall'HTML; `renderKpiValue` formatta e rende i suffissi testuali (es. "su 50") come unità più piccola
