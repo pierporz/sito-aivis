@@ -184,6 +184,101 @@ main {
 }
 
 /* =============================================================================
+   COVER — schermata iniziale con il brand aivis e l'invito a scorrere
+   ============================================================================= */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-page);
+}
+.hero__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: hero-in 1s var(--ease) both;
+}
+.hero__mark {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(4.5rem, 2rem + 13vw, 12rem);
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+  color: #14120f;
+}
+.hero__mark::after {
+  content: ".";
+  color: var(--c-2026-accent);
+}
+.hero__tag {
+  font-family: var(--font-sans);
+  font-size: clamp(0.72rem, 0.65rem + 0.3vw, 0.9rem);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #7a746a;
+  margin-top: 1.4rem;
+}
+.hero__lead {
+  font-family: var(--font-news);
+  font-style: italic;
+  font-size: clamp(1.05rem, 0.9rem + 0.9vw, 1.6rem);
+  line-height: 1.35;
+  color: #33302b;
+  max-width: 24ch;
+  margin-top: 1.6rem;
+}
+.hero__scroll {
+  position: absolute;
+  bottom: clamp(1.5rem, 5vh, 3rem);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: #7a746a;
+}
+.hero__scroll-label {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+.hero__arrow {
+  width: 13px;
+  height: 13px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  animation: hero-arrow 1.6s ease-in-out infinite;
+}
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* La freccetta pulsa verso il basso (l'asse è ruotato di 45°, translate(v,v) = giù) */
+@keyframes hero-arrow {
+  0%,
+  100% {
+    transform: rotate(45deg) translate(0, 0);
+    opacity: 0.55;
+  }
+  50% {
+    transform: rotate(45deg) translate(3.5px, 3.5px);
+    opacity: 1;
+  }
+}
+
+/* =============================================================================
    SCENA 1 — 2005: la SERP
    ============================================================================= */
 .serp2005 {
@@ -841,5 +936,9 @@ main {
   }
   .type-caret {
     display: none; /* niente cursore lampeggiante: testo statico e completo */
+  }
+  .hero__inner,
+  .hero__arrow {
+    animation: none;
   }
 }

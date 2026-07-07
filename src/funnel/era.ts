@@ -7,6 +7,7 @@ type Era = "past" | "shift" | "now";
 
 /** A quale classe d'epoca appartiene ogni scena (guida la famiglia di font). */
 const ERA_BY_NAME: Record<string, Era> = {
+  intro: "past",
   serp: "past",
   race: "past",
   shift: "shift",
