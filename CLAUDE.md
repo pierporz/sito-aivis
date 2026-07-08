@@ -31,7 +31,7 @@ Sito one-page scrollytelling per "citAIto", tool di AI Visibility Audit. Raccont
 ## Design system
 
 - Dark-first: nero `#0a0a0b`, bianco sporco `#ededed`, grigi freddi per il secondario
-- UN solo accento: lime `#c8f542`, usato chirurgicamente (CTA, numeri chiave, l'unica scena piena)
+- UN solo accento: lime `#c8f542`, usato chirurgicamente (CTA, numeri chiave, la "AI" del wordmark, l'unica scena piena)
 - Font Google: "Space Grotesk" (titoli, tracking negativo, dimensioni enormi con clamp), "Inter" (body), "JetBrains Mono" (dati, label tecniche, KPI, wordmark)
 - Bordi 1px `#232326` al posto delle ombre, angoli 6-8px
 - VIETATO: gradienti viola/blu, glassmorphism, emoji, iconcine tonde, copy tipo "rivoluzionario/potente"
