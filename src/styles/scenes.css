@@ -462,7 +462,9 @@
 .measure__wordmark {
   font-family: var(--font-mono);
   font-weight: 500;
-  font-size: var(--fs-mega);
+  /* Volutamente più piccolo di --fs-mega: in mono "citAIto" sforerebbe la
+     colonna sinistra e si sovrapporrebbe agli step (es. il 02 centrato). */
+  font-size: clamp(2.6rem, 1.4rem + 5vw, 6rem);
   letter-spacing: -0.03em;
   color: var(--c-white);
   display: block;
