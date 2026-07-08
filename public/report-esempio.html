@@ -1,0 +1,2381 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Visibility Audit — Velvea</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --primary: #c8f542;
+    /* lime pieno solo per riempimenti ampi; per testo/link su fondo chiaro il
+       contrasto è insufficiente, quindi una versione scurita (color-mix col nero). */
+    --primary-ink: color-mix(in srgb, var(--primary) 45%, #000);
+    --primary-strong: color-mix(in srgb, var(--primary) 60%, #000);
+    --primary-soft: #f7fee7;
+    --ink: #18181b;
+    --body: #3f3f46;
+    --muted: #71717a;
+    --line: #e4e4e7;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --dark: #0a0a0b;
+    --dark-2: #141416;
+    --offwhite: #ededed;
+    --good: #15803d; --good-bg: #dcfce7;
+    --warn: #b45309; --warn-bg: #fef3c7;
+    --info: #1d4ed8; --info-bg: #dbeafe;
+    --pos: #15803d; --neu: #a1a1aa; --neg: #dc2626; --mix: #d97706;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(24,24,27,.04), 0 10px 30px rgba(24,24,27,.06);
+    --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--body);
+    background: var(--bg);
+    font: 15px/1.6 var(--font-body);
+  }
+  h1, h2, h3 { color: var(--ink); font-family: var(--font-display); font-weight: 600; letter-spacing: -.02em; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px 52px; }
+
+  /* header / cover — dark come il sito */
+  header {
+    color: var(--offwhite);
+    background:
+      radial-gradient(circle at 88% -40%, color-mix(in srgb, var(--primary) 26%, transparent), transparent 26rem),
+      var(--dark);
+    border-bottom: 1px solid #232327;
+  }
+  .head-inner {
+    max-width: 1120px; margin: 0 auto; padding: 28px 24px;
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  }
+  .wordmark {
+    font-family: var(--font-mono); font-weight: 700; font-size: 21px;
+    letter-spacing: -.02em; color: var(--offwhite); text-transform: lowercase;
+    flex: none; line-height: 1;
+  }
+  .wordmark .hl { color: var(--primary); }
+  .head-div { width: 1px; align-self: stretch; background: #2c2c31; flex: none; margin: 2px 0; }
+  .logo {
+    width: 46px; height: 46px; border-radius: 12px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(145deg, var(--dark-2), var(--primary));
+    color: var(--dark); font-family: var(--font-display); font-weight: 700; font-size: 19px;
+    overflow: hidden; box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 35%, transparent);
+  }
+  .logo img { width: 100%; height: 100%; object-fit: contain; padding: 7px; background: #fff; }
+  .head-titles h1 { margin: 0; font-size: 21px; color: #fff; font-weight: 600; }
+  .head-titles .sub { color: #a1a1aa; font-size: 13px; margin-top: 4px; }
+  .head-meta { margin-left: auto; text-align: right; color: #8f8f97; font-size: 11.5px; font-family: var(--font-mono); line-height: 1.7; }
+  .head-meta code { font-family: var(--font-mono); color: var(--offwhite); background: rgba(255,255,255,.06); border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent); padding: 2px 7px; border-radius: 6px; }
+
+  /* tabs — stile sito: mono uppercase piccole, bordino inferiore lime sull'attiva */
+  .nav {
+    position: sticky; top: 0; z-index: 30;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner {
+    max-width: 1120px; margin: 0 auto; padding: 0 16px;
+    display: flex; gap: 2px; overflow-x: auto;
+  }
+  .tab-btn {
+    appearance: none; border: 0; background: none; cursor: pointer;
+    font-family: var(--font-mono); padding: 15px 13px; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .07em; color: var(--muted);
+    border-bottom: 2px solid transparent; white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active { color: var(--ink); border-bottom-color: var(--primary); }
+
+  /* panels */
+  .panel { display: none; padding-top: 30px; }
+  .panel.active { display: block; }
+  .panel > h2 { font-size: 24px; margin: 0 0 6px; color: var(--ink); }
+  .panel > .lead { color: var(--muted); margin: 0 0 22px; max-width: 72ch; }
+  .panel .card:first-of-type,
+  .panel .kpis:first-child { margin-top: 2px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 24px; margin-bottom: 18px;
+    box-shadow: var(--shadow);
+  }
+  .card h3 { margin: 0 0 14px; font-size: 15px; overflow-wrap: break-word; color: var(--ink); }
+
+  /* KPI */
+  .kpis { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+  .kpi {
+    background: var(--card);
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; min-width: 0;
+    box-shadow: var(--shadow);
+  }
+  .kpi .label { font-family: var(--font-mono); color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; overflow-wrap: break-word; }
+  .kpi .value { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 32px; font-weight: 600; color: var(--ink); margin-top: 9px; line-height: 1; letter-spacing: -.03em; }
+  .kpi .value small { font-size: 15px; color: var(--muted); font-weight: 500; }
+  .kpi-delta { margin-top: 7px; min-height: 15px; }
+  .kpi-delta .delta { margin-left: 0; font-size: 12px; }
+
+  /* reading callout — bordo sinistro lime scuro, fondo #f7fee7 */
+  .callout {
+    background: var(--primary-soft);
+    border: 1px solid color-mix(in srgb, var(--primary) 40%, var(--line));
+    border-left: 5px solid var(--primary-strong);
+    border-radius: 12px; padding: 19px 21px; margin-bottom: 20px;
+    font-size: 16px; color: var(--ink); box-shadow: var(--shadow);
+  }
+  .callout .tag { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--primary-ink); text-transform: uppercase; letter-spacing: .08em; display: block; margin-bottom: 7px; }
+
+  /* findings */
+  .findings { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .finding {
+    border: 1px solid var(--line); border-radius: 12px; padding: 16px;
+    background: var(--card); min-width: 0; overflow-wrap: break-word;
+  }
+  .finding .ft { font-weight: 650; color: var(--ink); margin-bottom: 5px; font-size: 14.5px; overflow-wrap: break-word; }
+  .finding .fx { font-size: 13.5px; color: var(--body); overflow-wrap: break-word; }
+  .finding.good { border-left: 4px solid var(--good); }
+  .finding.warning { border-left: 4px solid var(--warn); }
+  .finding.info { border-left: 4px solid var(--info); }
+  .badge { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 6px; text-transform: uppercase; letter-spacing: .03em; }
+  .badge.good { background: var(--good-bg); color: var(--good); }
+  .badge.warning { background: var(--warn-bg); color: var(--warn); }
+  .badge.info { background: var(--info-bg); color: var(--info); }
+  /* esiti stabilità */
+  .badge.stabile { background: var(--good-bg); color: var(--good); }
+  .badge.citato { background: var(--info-bg); color: var(--info); }
+  .badge.instabile { background: var(--warn-bg); color: var(--warn); }
+  .badge.perso { background: #fee2e2; color: var(--neg); }
+  /* coppie di statistiche (concordanza, quota fonti) */
+  .statpair { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .stat { border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; background: var(--card); min-width: 0; }
+  .stat .value { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 28px; font-weight: 600; color: var(--ink); line-height: 1; letter-spacing: -.02em; }
+  .stat .value small { font-size: 14px; color: var(--muted); font-weight: 500; }
+  .stat .label { color: var(--muted); font-size: 12.5px; margin-top: 7px; overflow-wrap: break-word; }
+  .stab-tot { display: flex; flex-wrap: wrap; gap: 8px 10px; margin: 2px 0 18px; }
+  .delta { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600; margin-left: 6px; white-space: nowrap; }
+  .delta.good { color: var(--good); }
+  .delta.bad { color: var(--neg); }
+  .delta.new { color: var(--info); font-weight: 600; }
+  .poslegend { display: flex; flex-wrap: wrap; gap: 7px 16px; margin-top: 14px; font-size: 12.5px; color: var(--body); }
+  .pl-item { display: inline-flex; align-items: center; gap: 6px; }
+  .pl-dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; flex: none; }
+  .pl-note { color: var(--muted); font-family: var(--font-mono); font-size: 11.5px; }
+
+  /* tables */
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 12px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  thead th { font-family: var(--font-mono); color: var(--muted); font-weight: 600; font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: color-mix(in srgb, var(--primary) 10%, transparent); }
+  td.num, th.num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  tr.main td { background: color-mix(in srgb, var(--primary) 18%, #fff); }
+  tr.main .bname { color: var(--primary-ink); font-weight: 700; }
+  .weak td { background: var(--warn-bg); }
+
+  /* sentiment bar */
+  .sent { display: inline-flex; height: 12px; width: 120px; border-radius: 999px; overflow: hidden; background: var(--line); }
+  .sent span { display: block; height: 100%; }
+
+  /* win rate bar (testa a testa) */
+  .winbar { display: inline-flex; align-items: center; gap: 10px; }
+  .winbar-track { width: 120px; height: 12px; border-radius: 999px; overflow: hidden; background: var(--line); flex: none; }
+  .winbar-fill { display: block; height: 100%; }
+  .winbar-fill.win { background: var(--pos); }
+  .winbar-fill.lose { background: var(--neg); }
+  .winbar-pct { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); min-width: 42px; }
+
+  /* chart box */
+  .chart-box { position: relative; height: 320px; }
+  .chart-box.tall { height: 380px; }
+  canvas { max-width: 100%; }
+
+  /* snippet list */
+  .snips { display: grid; gap: 10px; }
+  .snip { border: 1px solid var(--line); border-radius: 12px; padding: 13px 15px; background: var(--card); }
+  .snip .meta { font-size: 12px; color: var(--muted); margin-bottom: 5px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .snip .q { font-style: italic; color: var(--ink); }
+  .chip { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 6px; background: #f4f4f5; color: var(--body); }
+  .chip.neg { background: #fee2e2; color: var(--neg); }
+  .chip.mix { background: #fef3c7; color: var(--mix); }
+  .chip.own { background: var(--info-bg); color: var(--info); }
+  .muted { color: var(--muted); }
+  .empty { color: var(--muted); font-style: italic; }
+  ul.plain { margin: 0; padding-left: 18px; }
+  ul.plain li { margin: 5px 0; }
+  .defs dt { font-weight: 650; color: var(--ink); margin-top: 12px; }
+  .defs dd { margin: 3px 0 0; color: var(--body); font-size: 14px; }
+
+  /* info tooltip — si apre SOTTO l'icona per non coprire il titolo.
+     NB: classe `.tip` (non `.info`) per non collidere con i finding di livello "info". */
+  .tip {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; border-radius: 50%; margin-left: 7px;
+    background: var(--line); color: #52525b; font-size: 10px; font-weight: 700;
+    font-style: normal; cursor: pointer; position: relative; flex: none;
+    vertical-align: middle; text-transform: lowercase; font-family: var(--font-mono);
+  }
+  .tip:hover, .tip:focus, .tip.open { background: var(--primary); color: var(--dark); outline: none; }
+  .tip:hover::after, .tip:focus::after, .tip.open::after {
+    content: attr(data-tip); position: absolute; left: 50%; top: calc(100% + 9px);
+    transform: translateX(-50%); width: 250px; max-width: 70vw;
+    background: var(--dark); color: var(--offwhite); padding: 10px 12px; border-radius: 10px;
+    font-size: 12px; font-weight: 400; font-style: normal; line-height: 1.45;
+    font-family: var(--font-mono);
+    text-align: left; z-index: 60; box-shadow: 0 14px 34px rgba(0,0,0,.32);
+    pointer-events: none; white-space: normal;
+  }
+  .tip:hover::before, .tip:focus::before, .tip.open::before {
+    content: ""; position: absolute; left: 50%; top: calc(100% + 3px);
+    transform: translateX(-50%) rotate(45deg);
+    width: 9px; height: 9px; background: var(--dark); z-index: 60; pointer-events: none;
+  }
+
+  footer { color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); margin-top: 8px; padding: 22px 0; }
+
+  /* print: header dark → bianco con testo nero; espande tutti i tab in sequenza */
+  @media print {
+    body { background: #fff; }
+    header { background: #fff !important; color: var(--ink) !important; border-bottom: 2px solid var(--primary); }
+    .wordmark { color: var(--ink) !important; }
+    .wordmark .hl { color: var(--primary-ink) !important; }
+    .head-div { background: var(--line) !important; }
+    .head-titles h1 { color: var(--ink) !important; }
+    .head-titles .sub { color: var(--muted) !important; }
+    .head-meta { color: var(--muted) !important; }
+    .head-meta code { color: var(--ink) !important; background: none !important; border: 1px solid var(--line) !important; }
+    .nav, .tip, .no-print { display: none !important; }
+    .panel { display: block !important; padding-top: 0; page-break-before: always; }
+    .panel:first-of-type { page-break-before: avoid; }
+    .panel > h2 { color: var(--ink); border-top: 2px solid var(--primary); padding-top: 14px; }
+    .card, .kpi, .finding, .snip { break-inside: avoid; box-shadow: none; }
+    header, .callout { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-inner">
+    <div class="wordmark">cit<span class="hl">AI</span>to</div>
+    <div class="head-div"></div>
+    
+    <div class="head-titles">
+      <h1>AI Visibility Audit — Velvea</h1>
+      <div class="sub">Velvea · Report generativo sulla visibilità del brand nelle risposte AI</div>
+    </div>
+    <div class="head-meta">
+      Run <code>20260706-093000</code><br>
+      300 risposte · gemini, openai<br>
+      Generato il 08/07/2026 21:22 UTC
+    </div>
+  </div>
+</header>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <button class="tab-btn active" data-target="sintesi">Sintesi</button>
+    <button class="tab-btn" data-target="sov">Share of Voice</button>
+    <button class="tab-btn" data-target="testa-a-testa">Testa a testa</button>
+    <button class="tab-btn" data-target="categorie">Categorie</button>
+    <button class="tab-btn" data-target="stabilita">Stabilità</button>
+    <button class="tab-btn" data-target="posizionamento">Posizionamento &amp; Sentiment</button>
+    <button class="tab-btn" data-target="fonti">Fonti</button>
+    <button class="tab-btn" data-target="opportunita">Opportunità</button>
+    <button class="tab-btn" data-target="metodologia">Metodologia</button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  
+  <section class="panel active" id="sintesi" data-panel>
+    <h2>Executive Summary</h2>
+    <p class="lead">La lettura sintetica dei risultati dell'audit, con i numeri chiave e le evidenze principali calcolate automaticamente dai dati.</p>
+
+    <div class="callout">
+      <span class="tag">Lettura</span>
+      Competitor 1 è il brand più citato dalle AI (88.0%), davanti a Velvea (82.7%). È raccomandato esplicitamente nel 52.7% delle risposte.
+    </div>
+
+    <div class="kpis">
+      <div class="kpi">
+        <div class="label">Share of Voice <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Percentuale di risposte AI in cui Velvea viene citato almeno una volta. Più è alta, più il brand è presente nel discorso delle AI.">i</span></div>
+        <div class="value">82.7<small>%</small></div>
+        <div class="kpi-delta"><span class="delta good">▲ 38.4%</span></div>
+      </div>
+      <div class="kpi">
+        <div class="label">Recommendation rate <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Percentuale di risposte in cui il brand è raccomandato in modo esplicito (non solo citato). Misura la qualità della citazione, non solo la presenza.">i</span></div>
+        <div class="value">52.7<small>%</small></div>
+        <div class="kpi-delta"><span class="delta good">▲ 38.4%</span></div>
+      </div>
+      <div class="kpi">
+        <div class="label">Posizione media <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="In media, in che ordine il brand viene citato tra tutti i brand di una risposta. 1 = citato per primo. Più è basso, meglio è.">i</span></div>
+        <div class="value">1.68</div>
+        <div class="kpi-delta"><span class="delta good">▼ 1.84</span></div>
+      </div>
+      <div class="kpi">
+        <div class="label">Sentiment positivo <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Percentuale di citazioni del brand con tono positivo, sul totale delle citazioni con un sentiment rilevato.">i</span></div>
+        <div class="value">92.3<small>%</small></div>
+        <div class="kpi-delta"><span class="delta good">▲ 32.1%</span></div>
+      </div>
+      <div class="kpi">
+        <div class="label">Prompt persi <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Numero di domande in cui il brand non compare in nessuna risposta. Sono le opportunità di visibilità più immediate.">i</span></div>
+        <div class="value">2<small>/ 50</small></div>
+        <div class="kpi-delta"><span class="delta good">▼ 7</span></div>
+      </div>
+    </div>
+    <p class="muted" style="margin:8px 2px 0;font-size:12px">Variazione rispetto al run precedente (05/06/2026 10:15).</p>
+
+    
+    <h3 style="margin:26px 0 12px">Key findings</h3>
+    <div class="findings">
+      
+      <div class="finding warning">
+        <div class="ft">
+          <span class="badge warning">Attenzione</span>
+          Competitor 1 supera Velvea in visibilità
+        </div>
+        <div class="fx" style="margin-top:6px">Competitor 1 è citato nel 88.0% delle risposte contro il 82.7% di Velvea: gap di 5.3 punti da recuperare.</div>
+      </div>
+      
+      <div class="finding info">
+        <div class="ft">
+          <span class="badge info">Nota</span>
+          Prompt senza il brand
+        </div>
+        <div class="fx" style="margin-top:6px">In 2 prompt su 50 Velvea non compare mai: sono le opportunità di visibilità prioritarie.</div>
+      </div>
+      
+      <div class="finding warning">
+        <div class="ft">
+          <span class="badge warning">Attenzione</span>
+          Citazioni con sentiment critico
+        </div>
+        <div class="fx" style="margin-top:6px">Rilevate 2 citazioni negative o miste su Velvea: vedi la sezione Posizionamento e sentiment.</div>
+      </div>
+      
+      <div class="finding info">
+        <div class="ft">
+          <span class="badge info">Nota</span>
+          Categoria più debole: Comparazioni di categoria
+        </div>
+        <div class="fx" style="margin-top:6px">Share of Voice 72.2% contro il 82.7% medio: categoria su cui concentrare i contenuti.</div>
+      </div>
+      
+    </div>
+    
+
+    
+    <div class="card" style="margin-top:22px">
+      <h3>Concordanza tra piattaforme <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Quanto la visibilità del brand è consistente tra le diverse AI.">i</span></h3>
+      <p class="lead" style="margin:-4px 0 14px">Su 50 prompt, con Velvea valutato su 2 piattaforme.</p>
+      <div class="statpair">
+        <div class="stat">
+          <div class="value">96.0<small>%</small></div>
+          <div class="label">Prompt in cui Velvea è citato da <strong>tutte</strong> le piattaforme (48/50)</div>
+        </div>
+        <div class="stat">
+          <div class="value">0.0<small>%</small></div>
+          <div class="label">Prompt in cui è citato da <strong>alcune ma non tutte</strong> (0/50)</div>
+        </div>
+      </div>
+    </div>
+    
+
+    <div class="card" style="margin-top:22px">
+      <h3>Share of Voice e recommendation rate per brand <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Per ogni brand, la presenza nelle risposte AI (Share of Voice) e quanto viene raccomandato in modo esplicito (recommendation rate), affiancati.">i</span></h3>
+      <div class="chart-box"><canvas id="sovMain"></canvas></div>
+    </div>
+  </section>
+
+  
+  <section class="panel" id="sov" data-panel>
+    <h2>Share of Voice</h2>
+    <p class="lead">Quanto ogni brand è presente nelle risposte delle AI, a livello globale e per singola piattaforma.</p>
+
+    <div class="card">
+      <h3>Share of Voice e recommendation rate per brand <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Barre affiancate per ogni brand: percentuale di risposte in cui è citato (Share of Voice) e in cui è raccomandato esplicitamente (recommendation rate).">i</span></h3>
+      <div class="chart-box"><canvas id="sovAll"></canvas></div>
+    </div>
+
+    
+    <div class="card">
+      <h3>Trend Share of Voice — Velvea <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Evoluzione della Share of Voice del brand tra i run successivi dell'audit. Permette di misurare l'effetto delle azioni intraprese.">i</span></h3>
+      <div class="chart-box"><canvas id="trendChart"></canvas></div>
+    </div>
+    
+
+    
+    <div class="card table-scroll">
+      <h3>Confronto con il run precedente <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Variazione di Share of Voice, tasso di raccomandazione e posizione media di ciascun brand rispetto al run precedente dell'audit. Verde = miglioramento, rosso = peggioramento.">i</span></h3>
+      <p class="lead" style="margin:-4px 0 14px">Run attuale <strong>06/07/2026 09:30</strong> · precedente <strong>05/06/2026 10:15</strong>.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Brand</th>
+            <th class="num">Share of Voice</th><th class="num">Raccomandato</th><th class="num">Pos. media</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr class="main">
+            <td class="bname">Velvea</td>
+            
+            
+            <td class="num">
+              82.7%
+              
+                <span class="delta good">▲ 38.4%</span>
+              
+            </td>
+            
+            
+            <td class="num">
+              52.7%
+              
+                <span class="delta good">▲ 38.4%</span>
+              
+            </td>
+            
+            
+            <td class="num">
+              1.68
+              
+                <span class="delta good">▼ 1.84</span>
+              
+            </td>
+            
+          </tr>
+          
+          <tr class="">
+            <td class="bname">Competitor 1</td>
+            
+            
+            <td class="num">
+              88.0%
+              
+                <span class="delta bad">▼ 1.3%</span>
+              
+            </td>
+            
+            
+            <td class="num">
+              28.7%
+              
+                <span class="delta bad">▼ 11.0%</span>
+              
+            </td>
+            
+            
+            <td class="num">
+              2.36
+              
+                <span class="delta bad">▲ 0.54</span>
+              
+            </td>
+            
+          </tr>
+          
+          <tr class="">
+            <td class="bname">Competitor 2</td>
+            
+            
+            <td class="num">
+              46.0%
+              
+                <span class="delta bad">▼ 1.3%</span>
+              
+            </td>
+            
+            
+            <td class="num">
+              2.7%
+              
+                <span class="delta bad">▼ 0.6%</span>
+              
+            </td>
+            
+            
+            <td class="num">
+              3.54
+              
+                <span class="delta bad">▲ 0.22</span>
+              
+            </td>
+            
+          </tr>
+          
+          <tr class="">
+            <td class="bname">Competitor 3</td>
+            
+            
+            <td class="num">
+              49.7%
+              
+                <span class="delta bad">▼ 1.6%</span>
+              
+            </td>
+            
+            
+            <td class="num">
+              4.7%
+              
+                <span class="delta bad">▼ 1.3%</span>
+              
+            </td>
+            
+            
+            <td class="num">
+              3.62
+              
+                <span class="delta bad">▲ 0.58</span>
+              
+            </td>
+            
+          </tr>
+          
+          <tr class="">
+            <td class="bname">Competitor 4</td>
+            
+            
+            <td class="num">
+              48.3%
+              
+                <span class="delta bad">▼ 4.0%</span>
+              
+            </td>
+            
+            
+            <td class="num">
+              5.0%
+              
+                <span class="delta good">▲ 0.7%</span>
+              
+            </td>
+            
+            
+            <td class="num">
+              3.63
+              
+                <span class="delta bad">▲ 0.53</span>
+              
+            </td>
+            
+          </tr>
+          
+          <tr class="">
+            <td class="bname">Competitor 5</td>
+            
+            
+            <td class="num">
+              53.0%
+              
+                <span class="delta good">▲ 3.7%</span>
+              
+            </td>
+            
+            
+            <td class="num">
+              6.3%
+              
+                <span class="delta good">▲ 1.0%</span>
+              
+            </td>
+            
+            
+            <td class="num">
+              3.35
+              
+                <span class="delta bad">▲ 0.28</span>
+              
+            </td>
+            
+          </tr>
+          
+          <tr class="">
+            <td class="bname">Competitor 6</td>
+            
+            
+            <td class="num">
+              48.0%
+              
+                <span class="delta bad">▼ 4.3%</span>
+              
+            </td>
+            
+            
+            <td class="num">
+              2.7%
+              
+                <span class="delta bad">▼ 3.6%</span>
+              
+            </td>
+            
+            
+            <td class="num">
+              3.51
+              
+                <span class="delta bad">▲ 0.53</span>
+              
+            </td>
+            
+          </tr>
+          
+          <tr class="">
+            <td class="bname">Competitor 7</td>
+            
+            
+            <td class="num">
+              50.7%
+              
+            </td>
+            
+            
+            <td class="num">
+              4.3%
+              
+                <span class="delta bad">▼ 2.7%</span>
+              
+            </td>
+            
+            
+            <td class="num">
+              3.61
+              
+                <span class="delta bad">▲ 0.63</span>
+              
+            </td>
+            
+          </tr>
+          
+        </tbody>
+      </table>
+    </div>
+    
+
+    
+    <div class="card table-scroll">
+      <h3>Confronto tra piattaforme — Velvea <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Share of Voice, tasso di raccomandazione e posizione media del brand principale su ciascuna piattaforma AI, fianco a fianco.">i</span></h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Piattaforma</th>
+            <th class="num">Risposte</th>
+            <th class="num">Share of Voice</th>
+            <th class="num">Raccomandato</th>
+            <th class="num">Pos. media</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td class="bname">gemini</td>
+            <td class="num">150</td>
+            <td class="num">86.7%</td>
+            <td class="num">61.3%</td>
+            <td class="num">1.65</td>
+          </tr>
+          
+          <tr>
+            <td class="bname">openai</td>
+            <td class="num">150</td>
+            <td class="num">78.7%</td>
+            <td class="num">44.0%</td>
+            <td class="num">1.72</td>
+          </tr>
+          
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Share of Voice per piattaforma <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Presenza di ciascun brand tracciato su ogni piattaforma AI. Le barre raggruppate mostrano dove il brand è più forte o più debole rispetto ai competitor.">i</span></h3>
+      <div class="chart-box tall"><canvas id="platformChart"></canvas></div>
+    </div>
+    
+
+    <div class="card table-scroll">
+      <h3>Dettaglio per brand <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Per ogni brand: presenza (SoV), quanto viene raccomandato, posizione media, mix di sentiment e presenza su ciascuna piattaforma.">i</span></h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Brand</th>
+            <th class="num">Share of Voice</th>
+            <th class="num">Raccomandato</th>
+            <th class="num">Pos. media</th>
+            <th>Sentiment</th>
+            <th class="num">gemini</th><th class="num">openai</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr class="main">
+            <td class="bname">Velvea</td>
+            <td class="num">82.7%</td>
+            <td class="num">52.7%</td>
+            <td class="num">1.68</td>
+            <td><span class="sent" title="positivo 229 · neutro 17 · negativo 2 · misto 0">
+  <span style="width:92.33870967741936%;background:var(--pos)"></span>
+  <span style="width:6.854838709677419%;background:var(--neu)"></span>
+  <span style="width:0.8064516129032258%;background:var(--neg)"></span>
+  <span style="width:0.0%;background:var(--mix)"></span>
+</span></td>
+            <td class="num">86.7%</td><td class="num">78.7%</td>
+          </tr>
+          
+          <tr class="">
+            <td class="bname">Competitor 1</td>
+            <td class="num">88.0%</td>
+            <td class="num">28.7%</td>
+            <td class="num">2.36</td>
+            <td><span class="sent" title="positivo 152 · neutro 112 · negativo 0 · misto 0">
+  <span style="width:57.57575757575758%;background:var(--pos)"></span>
+  <span style="width:42.42424242424242%;background:var(--neu)"></span>
+  <span style="width:0.0%;background:var(--neg)"></span>
+  <span style="width:0.0%;background:var(--mix)"></span>
+</span></td>
+            <td class="num">87.3%</td><td class="num">88.7%</td>
+          </tr>
+          
+          <tr class="">
+            <td class="bname">Competitor 2</td>
+            <td class="num">46.0%</td>
+            <td class="num">2.7%</td>
+            <td class="num">3.54</td>
+            <td><span class="sent" title="positivo 65 · neutro 73 · negativo 0 · misto 0">
+  <span style="width:47.10144927536232%;background:var(--pos)"></span>
+  <span style="width:52.89855072463768%;background:var(--neu)"></span>
+  <span style="width:0.0%;background:var(--neg)"></span>
+  <span style="width:0.0%;background:var(--mix)"></span>
+</span></td>
+            <td class="num">50.0%</td><td class="num">42.0%</td>
+          </tr>
+          
+          <tr class="">
+            <td class="bname">Competitor 3</td>
+            <td class="num">49.7%</td>
+            <td class="num">4.7%</td>
+            <td class="num">3.62</td>
+            <td><span class="sent" title="positivo 80 · neutro 69 · negativo 0 · misto 0">
+  <span style="width:53.691275167785236%;background:var(--pos)"></span>
+  <span style="width:46.308724832214764%;background:var(--neu)"></span>
+  <span style="width:0.0%;background:var(--neg)"></span>
+  <span style="width:0.0%;background:var(--mix)"></span>
+</span></td>
+            <td class="num">49.3%</td><td class="num">50.0%</td>
+          </tr>
+          
+          <tr class="">
+            <td class="bname">Competitor 4</td>
+            <td class="num">48.3%</td>
+            <td class="num">5.0%</td>
+            <td class="num">3.63</td>
+            <td><span class="sent" title="positivo 83 · neutro 62 · negativo 0 · misto 0">
+  <span style="width:57.241379310344826%;background:var(--pos)"></span>
+  <span style="width:42.758620689655174%;background:var(--neu)"></span>
+  <span style="width:0.0%;background:var(--neg)"></span>
+  <span style="width:0.0%;background:var(--mix)"></span>
+</span></td>
+            <td class="num">56.0%</td><td class="num">40.7%</td>
+          </tr>
+          
+          <tr class="">
+            <td class="bname">Competitor 5</td>
+            <td class="num">53.0%</td>
+            <td class="num">6.3%</td>
+            <td class="num">3.35</td>
+            <td><span class="sent" title="positivo 77 · neutro 82 · negativo 0 · misto 0">
+  <span style="width:48.42767295597484%;background:var(--pos)"></span>
+  <span style="width:51.57232704402516%;background:var(--neu)"></span>
+  <span style="width:0.0%;background:var(--neg)"></span>
+  <span style="width:0.0%;background:var(--mix)"></span>
+</span></td>
+            <td class="num">54.0%</td><td class="num">52.0%</td>
+          </tr>
+          
+          <tr class="">
+            <td class="bname">Competitor 6</td>
+            <td class="num">48.0%</td>
+            <td class="num">2.7%</td>
+            <td class="num">3.51</td>
+            <td><span class="sent" title="positivo 76 · neutro 68 · negativo 0 · misto 0">
+  <span style="width:52.77777777777778%;background:var(--pos)"></span>
+  <span style="width:47.22222222222222%;background:var(--neu)"></span>
+  <span style="width:0.0%;background:var(--neg)"></span>
+  <span style="width:0.0%;background:var(--mix)"></span>
+</span></td>
+            <td class="num">50.7%</td><td class="num">45.3%</td>
+          </tr>
+          
+          <tr class="">
+            <td class="bname">Competitor 7</td>
+            <td class="num">50.7%</td>
+            <td class="num">4.3%</td>
+            <td class="num">3.61</td>
+            <td><span class="sent" title="positivo 84 · neutro 68 · negativo 0 · misto 0">
+  <span style="width:55.26315789473684%;background:var(--pos)"></span>
+  <span style="width:44.73684210526316%;background:var(--neu)"></span>
+  <span style="width:0.0%;background:var(--neg)"></span>
+  <span style="width:0.0%;background:var(--mix)"></span>
+</span></td>
+            <td class="num">55.3%</td><td class="num">46.0%</td>
+          </tr>
+          
+        </tbody>
+      </table>
+      <p class="muted" style="margin-top:12px">
+        Legenda sentiment:
+        <span style="color:var(--pos)">■</span> positivo
+        <span style="color:var(--neu)">■</span> neutro
+        <span style="color:var(--neg)">■</span> negativo
+        <span style="color:var(--mix)">■</span> misto
+      </p>
+    </div>
+  </section>
+
+  
+  <section class="panel" id="testa-a-testa" data-panel>
+    <h2>Testa a testa</h2>
+    <p class="lead">Confronto diretto sull'ordine di citazione: quando Velvea e un competitor compaiono nella stessa risposta, chi viene nominato per primo.</p>
+
+    
+    <div class="card table-scroll">
+      <h3>Ordine di citazione contro i competitor <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Quando Velvea e il competitor compaiono nella stessa risposta: chi viene citato per primo? Il win rate è la % di volte in cui Velvea precede il competitor.">i</span></h3>
+      <table>
+        <thead>
+          <tr>
+            <th>vs</th>
+            <th class="num">Co-presenze</th>
+            <th class="num">Velvea prima</th>
+            <th class="num">Competitor prima</th>
+            <th>Win rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td class="bname">Competitor 1</td>
+            <td class="num">217</td>
+            <td class="num">141</td>
+            <td class="num">76</td>
+            <td>
+              <span class="winbar">
+                <span class="winbar-track">
+                  <span class="winbar-fill win" style="width:65.0%"></span>
+                </span>
+                <span class="winbar-pct">65.0%</span>
+              </span>
+            </td>
+          </tr>
+          
+          <tr>
+            <td class="bname">Competitor 5</td>
+            <td class="num">133</td>
+            <td class="num">111</td>
+            <td class="num">22</td>
+            <td>
+              <span class="winbar">
+                <span class="winbar-track">
+                  <span class="winbar-fill win" style="width:83.5%"></span>
+                </span>
+                <span class="winbar-pct">83.5%</span>
+              </span>
+            </td>
+          </tr>
+          
+          <tr>
+            <td class="bname">Competitor 3</td>
+            <td class="num">126</td>
+            <td class="num">109</td>
+            <td class="num">17</td>
+            <td>
+              <span class="winbar">
+                <span class="winbar-track">
+                  <span class="winbar-fill win" style="width:86.5%"></span>
+                </span>
+                <span class="winbar-pct">86.5%</span>
+              </span>
+            </td>
+          </tr>
+          
+          <tr>
+            <td class="bname">Competitor 7</td>
+            <td class="num">124</td>
+            <td class="num">110</td>
+            <td class="num">14</td>
+            <td>
+              <span class="winbar">
+                <span class="winbar-track">
+                  <span class="winbar-fill win" style="width:88.7%"></span>
+                </span>
+                <span class="winbar-pct">88.7%</span>
+              </span>
+            </td>
+          </tr>
+          
+          <tr>
+            <td class="bname">Competitor 4</td>
+            <td class="num">120</td>
+            <td class="num">105</td>
+            <td class="num">15</td>
+            <td>
+              <span class="winbar">
+                <span class="winbar-track">
+                  <span class="winbar-fill win" style="width:87.5%"></span>
+                </span>
+                <span class="winbar-pct">87.5%</span>
+              </span>
+            </td>
+          </tr>
+          
+          <tr>
+            <td class="bname">Competitor 6</td>
+            <td class="num">119</td>
+            <td class="num">108</td>
+            <td class="num">11</td>
+            <td>
+              <span class="winbar">
+                <span class="winbar-track">
+                  <span class="winbar-fill win" style="width:90.8%"></span>
+                </span>
+                <span class="winbar-pct">90.8%</span>
+              </span>
+            </td>
+          </tr>
+          
+          <tr>
+            <td class="bname">Competitor 2</td>
+            <td class="num">113</td>
+            <td class="num">99</td>
+            <td class="num">14</td>
+            <td>
+              <span class="winbar">
+                <span class="winbar-track">
+                  <span class="winbar-fill win" style="width:87.6%"></span>
+                </span>
+                <span class="winbar-pct">87.6%</span>
+              </span>
+            </td>
+          </tr>
+          
+        </tbody>
+      </table>
+      <p class="muted" style="margin-top:12px">
+        Win rate =
+        <span style="color:var(--pos)">■</span> ≥ 50% (Velvea citato prima)
+        <span style="color:var(--neg);margin-left:10px">■</span> &lt; 50% (competitor citato prima).
+        I pareggi (stessa posizione) rientrano nelle co-presenze ma non nel win rate.
+      </p>
+    </div>
+
+    
+    <div class="callout">
+      <span class="tag">Lettura</span>
+      Quando compare insieme ai principali competitor, Velvea viene citato per primo più spesso di tutti: Competitor 1, Competitor 5, Competitor 3, Competitor 7, Competitor 4, Competitor 6 e Competitor 2. Il dato più fuori scala è contro Competitor 1 (65.0% di win rate).
+    </div>
+    
+    
+  </section>
+
+  
+  <section class="panel" id="categorie" data-panel>
+    <h2>Analisi per categoria di prompt</h2>
+    <p class="lead">Le domande dell'audit sono raggruppate per tema (dalle intestazioni del set di prompt). Così si vede in quali tipi di domanda il brand è forte o debole.</p>
+
+    
+    <div class="card">
+      <h3>Share of Voice e raccomandazione per categoria <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Per ogni tema di domanda: quanto il brand è citato (SoV) e quanto è raccomandato. Le barre più basse indicano i temi su cui lavorare.">i</span></h3>
+      <div class="chart-box tall"><canvas id="catChart"></canvas></div>
+    </div>
+
+    <div class="card table-scroll">
+      <h3>Dettaglio categorie <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Ordinate dalla più debole alla più forte per Share of Voice. La riga evidenziata è la categoria con visibilità più bassa.">i</span></h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Categoria</th>
+            <th class="num">Prompt</th>
+            <th class="num">Risposte</th>
+            <th class="num">Share of Voice</th>
+            <th class="num">Raccomandato</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr class="weak">
+            <td>Comparazioni di categoria</td>
+            <td class="num">6</td>
+            <td class="num">36</td>
+            <td class="num">72.2% <span class="delta good">▲ 8.3%</span></td>
+            <td class="num">41.7% <span class="delta good">▲ 25.0%</span></td>
+          </tr>
+          
+          <tr class="">
+            <td>Assistenza e durabilità</td>
+            <td class="num">10</td>
+            <td class="num">60</td>
+            <td class="num">73.3% <span class="delta good">▲ 26.6%</span></td>
+            <td class="num">41.7% <span class="delta good">▲ 26.7%</span></td>
+          </tr>
+          
+          <tr class="">
+            <td>Best-of generici</td>
+            <td class="num">8</td>
+            <td class="num">48</td>
+            <td class="num">81.2% <span class="delta good">▲ 47.9%</span></td>
+            <td class="num">52.1% <span class="delta good">▲ 43.8%</span></td>
+          </tr>
+          
+          <tr class="">
+            <td>Casi d'uso specifici</td>
+            <td class="num">10</td>
+            <td class="num">60</td>
+            <td class="num">85.0% <span class="delta good">▲ 55.0%</span></td>
+            <td class="num">60.0% <span class="delta good">▲ 43.3%</span></td>
+          </tr>
+          
+          <tr class="">
+            <td>Accessori ed ecosistema</td>
+            <td class="num">6</td>
+            <td class="num">36</td>
+            <td class="num">88.9% <span class="delta good">▲ 52.8%</span></td>
+            <td class="num">55.6% <span class="delta good">▲ 52.8%</span></td>
+          </tr>
+          
+          <tr class="">
+            <td>Intento d'acquisto</td>
+            <td class="num">10</td>
+            <td class="num">60</td>
+            <td class="num">93.3% <span class="delta good">▲ 35.0%</span></td>
+            <td class="num">61.7% <span class="delta good">▲ 40.0%</span></td>
+          </tr>
+          
+        </tbody>
+      </table>
+    </div>
+    
+  </section>
+
+  
+  <section class="panel" id="stabilita" data-panel>
+    <h2>Stabilità delle risposte</h2>
+    <p class="lead">Le risposte delle AI variano tra una ripetizione e l'altra. Questa vista mostra, prompt per prompt, quanto la presenza di Velvea è consistente attraverso le ripetizioni e le piattaforme.</p>
+
+    <div class="card">
+      <h3>Esito per prompt <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Le risposte AI non sono deterministiche: possono cambiare tra ripetizioni della stessa domanda. Un prompt è stabile solo se il brand compare in tutte le ripetizioni ed è sempre raccomandato.">i</span></h3>
+      <div class="stab-tot">
+        <span class="badge stabile">1 stabili</span>
+        <span class="badge citato">21 citati</span>
+        <span class="badge instabile">26 instabili</span>
+        <span class="badge perso">2 persi</span>
+      </div>
+      
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Prompt</th>
+              <th class="num">Citato</th>
+              <th class="num">Raccomandato</th>
+              <th class="num">Pos. media</th>
+              <th>Esito</th>
+              <th>Categoria</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+            <tr>
+              <td>capsule compatibili o originali: cosa conviene?</td>
+              <td class="num">0/6</td>
+              <td class="num">0/6</td>
+              <td class="num">—</td>
+              <td><span class="badge perso">perso</span></td>
+              <td class="muted">Comparazioni di categoria</td>
+            </tr>
+            
+            <tr>
+              <td>quale macchina espresso ha aggiornamenti e ricambi garantiti 10 anni?</td>
+              <td class="num">0/6</td>
+              <td class="num">0/6</td>
+              <td class="num">—</td>
+              <td><span class="badge perso">perso</span></td>
+              <td class="muted">Assistenza e durabilità</td>
+            </tr>
+            
+            <tr>
+              <td>migliore macchina caffè in capsule o macinato?</td>
+              <td class="num">3/6</td>
+              <td class="num">2/6</td>
+              <td class="num">2.0</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Best-of generici</td>
+            </tr>
+            
+            <tr>
+              <td>quale marca di macchine espresso ha meno guasti?</td>
+              <td class="num">3/6</td>
+              <td class="num">3/6</td>
+              <td class="num">2.0</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Assistenza e durabilità</td>
+            </tr>
+            
+            <tr>
+              <td>macchina da caffè facile da pulire: quale comprare?</td>
+              <td class="num">4/6</td>
+              <td class="num">1/6</td>
+              <td class="num">1.5</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Casi d'uso specifici</td>
+            </tr>
+            
+            <tr>
+              <td>macchina da caffè riparabile facilmente: quale scegliere?</td>
+              <td class="num">4/6</td>
+              <td class="num">2/6</td>
+              <td class="num">1.5</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Assistenza e durabilità</td>
+            </tr>
+            
+            <tr>
+              <td>macchine da caffè con miglior servizio clienti in Italia</td>
+              <td class="num">4/6</td>
+              <td class="num">3/6</td>
+              <td class="num">1.75</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Assistenza e durabilità</td>
+            </tr>
+            
+            <tr>
+              <td>migliore macchina da caffè automatica per casa</td>
+              <td class="num">4/6</td>
+              <td class="num">2/6</td>
+              <td class="num">1.5</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Best-of generici</td>
+            </tr>
+            
+            <tr>
+              <td>migliore macchina da caffè silenziosa</td>
+              <td class="num">4/6</td>
+              <td class="num">4/6</td>
+              <td class="num">1.25</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Casi d'uso specifici</td>
+            </tr>
+            
+            <tr>
+              <td>migliore macchina espresso per latte art</td>
+              <td class="num">4/6</td>
+              <td class="num">4/6</td>
+              <td class="num">1.75</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Casi d'uso specifici</td>
+            </tr>
+            
+            <tr>
+              <td>migliore macchina espresso qualità prezzo</td>
+              <td class="num">4/6</td>
+              <td class="num">3/6</td>
+              <td class="num">1.75</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Best-of generici</td>
+            </tr>
+            
+            <tr>
+              <td>quale addolcitore acqua per macchina da caffè?</td>
+              <td class="num">4/6</td>
+              <td class="num">4/6</td>
+              <td class="num">1.5</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Accessori ed ecosistema</td>
+            </tr>
+            
+            <tr>
+              <td>quale macchina da caffè ha le migliori recensioni degli utenti?</td>
+              <td class="num">4/6</td>
+              <td class="num">2/6</td>
+              <td class="num">1.25</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Assistenza e durabilità</td>
+            </tr>
+            
+            <tr>
+              <td>vale la pena comprare una macchina espresso di fascia alta?</td>
+              <td class="num">4/6</td>
+              <td class="num">2/6</td>
+              <td class="num">1.75</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Intento d'acquisto</td>
+            </tr>
+            
+            <tr>
+              <td>macchina da caffè da comprare nel Black Friday: quale tenere d'occhio?</td>
+              <td class="num">5/6</td>
+              <td class="num">1/6</td>
+              <td class="num">1.6</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Intento d'acquisto</td>
+            </tr>
+            
+            <tr>
+              <td>macchina da caffè per ufficio piccolo: quale scegliere?</td>
+              <td class="num">5/6</td>
+              <td class="num">2/6</td>
+              <td class="num">2.0</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Casi d'uso specifici</td>
+            </tr>
+            
+            <tr>
+              <td>macchina espresso economica o professionale per casa?</td>
+              <td class="num">5/6</td>
+              <td class="num">4/6</td>
+              <td class="num">1.6</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Comparazioni di categoria</td>
+            </tr>
+            
+            <tr>
+              <td>macchine da caffè italiane o tedesche: quali sono migliori?</td>
+              <td class="num">5/6</td>
+              <td class="num">4/6</td>
+              <td class="num">2.0</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Comparazioni di categoria</td>
+            </tr>
+            
+            <tr>
+              <td>meglio macinacaffè integrato o separato?</td>
+              <td class="num">5/6</td>
+              <td class="num">3/6</td>
+              <td class="num">1.0</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Comparazioni di categoria</td>
+            </tr>
+            
+            <tr>
+              <td>meglio una macchina con caldaia singola o doppia?</td>
+              <td class="num">5/6</td>
+              <td class="num">2/6</td>
+              <td class="num">1.8</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Comparazioni di categoria</td>
+            </tr>
+            
+            <tr>
+              <td>migliore macchina da caffè sotto i 500 euro</td>
+              <td class="num">5/6</td>
+              <td class="num">4/6</td>
+              <td class="num">2.0</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Best-of generici</td>
+            </tr>
+            
+            <tr>
+              <td>migliore macchina espresso per fare il cappuccino a casa</td>
+              <td class="num">5/6</td>
+              <td class="num">5/6</td>
+              <td class="num">1.8</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Casi d'uso specifici</td>
+            </tr>
+            
+            <tr>
+              <td>migliori chicchi di caffè per espresso a casa</td>
+              <td class="num">5/6</td>
+              <td class="num">3/6</td>
+              <td class="num">1.8</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Accessori ed ecosistema</td>
+            </tr>
+            
+            <tr>
+              <td>quale bilancia per espresso consigli?</td>
+              <td class="num">5/6</td>
+              <td class="num">3/6</td>
+              <td class="num">1.4</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Accessori ed ecosistema</td>
+            </tr>
+            
+            <tr>
+              <td>quale macchina espresso ha la garanzia migliore?</td>
+              <td class="num">5/6</td>
+              <td class="num">3/6</td>
+              <td class="num">1.6</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Assistenza e durabilità</td>
+            </tr>
+            
+            <tr>
+              <td>quale macchina espresso manuale scegliere per iniziare?</td>
+              <td class="num">5/6</td>
+              <td class="num">3/6</td>
+              <td class="num">2.6</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Best-of generici</td>
+            </tr>
+            
+            <tr>
+              <td>quale macchina espresso occupa poco spazio in cucina?</td>
+              <td class="num">5/6</td>
+              <td class="num">1/6</td>
+              <td class="num">2.0</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Casi d'uso specifici</td>
+            </tr>
+            
+            <tr>
+              <td>quale marca ha la migliore assistenza in Italia?</td>
+              <td class="num">5/6</td>
+              <td class="num">4/6</td>
+              <td class="num">1.4</td>
+              <td><span class="badge instabile">instabile</span></td>
+              <td class="muted">Intento d'acquisto</td>
+            </tr>
+            
+            <tr>
+              <td>conviene riparare o sostituire una macchina espresso?</td>
+              <td class="num">6/6</td>
+              <td class="num">3/6</td>
+              <td class="num">1.67</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Assistenza e durabilità</td>
+            </tr>
+            
+            <tr>
+              <td>devo regalare una macchina da caffè a mio padre, cosa consigli?</td>
+              <td class="num">6/6</td>
+              <td class="num">5/6</td>
+              <td class="num">1.5</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Intento d'acquisto</td>
+            </tr>
+            
+            <tr>
+              <td>kit barista per casa: cosa serve davvero?</td>
+              <td class="num">6/6</td>
+              <td class="num">2/6</td>
+              <td class="num">1.5</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Accessori ed ecosistema</td>
+            </tr>
+            
+            <tr>
+              <td>macchina espresso con macinacaffè integrato: quale consigli?</td>
+              <td class="num">6/6</td>
+              <td class="num">5/6</td>
+              <td class="num">1.67</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Casi d'uso specifici</td>
+            </tr>
+            
+            <tr>
+              <td>macchina espresso usata o nuova: cosa conviene?</td>
+              <td class="num">6/6</td>
+              <td class="num">2/6</td>
+              <td class="num">1.67</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Assistenza e durabilità</td>
+            </tr>
+            
+            <tr>
+              <td>meglio macchina automatica o manuale per l'espresso?</td>
+              <td class="num">6/6</td>
+              <td class="num">2/6</td>
+              <td class="num">1.83</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Comparazioni di categoria</td>
+            </tr>
+            
+            <tr>
+              <td>migliore macchina da caffè per un regalo di nozze</td>
+              <td class="num">6/6</td>
+              <td class="num">5/6</td>
+              <td class="num">1.33</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Casi d'uso specifici</td>
+            </tr>
+            
+            <tr>
+              <td>migliori tazzine per espresso: quali comprare?</td>
+              <td class="num">6/6</td>
+              <td class="num">4/6</td>
+              <td class="num">1.0</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Accessori ed ecosistema</td>
+            </tr>
+            
+            <tr>
+              <td>prima macchina espresso seria: quale comprare?</td>
+              <td class="num">6/6</td>
+              <td class="num">4/6</td>
+              <td class="num">1.83</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Intento d'acquisto</td>
+            </tr>
+            
+            <tr>
+              <td>qual è la migliore macchina da caffè espresso del 2026?</td>
+              <td class="num">6/6</td>
+              <td class="num">5/6</td>
+              <td class="num">2.17</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Best-of generici</td>
+            </tr>
+            
+            <tr>
+              <td>quale macchina da caffè comprare sotto i 200 euro?</td>
+              <td class="num">6/6</td>
+              <td class="num">3/6</td>
+              <td class="num">1.67</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Best-of generici</td>
+            </tr>
+            
+            <tr>
+              <td>quale macchina da caffè consuma meno energia?</td>
+              <td class="num">6/6</td>
+              <td class="num">3/6</td>
+              <td class="num">1.83</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Intento d'acquisto</td>
+            </tr>
+            
+            <tr>
+              <td>quale macchina da caffè per chi beve 6 caffè al giorno?</td>
+              <td class="num">6/6</td>
+              <td class="num">5/6</td>
+              <td class="num">1.83</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Casi d'uso specifici</td>
+            </tr>
+            
+            <tr>
+              <td>quale macchina da caffè tiene meglio il valore nel tempo?</td>
+              <td class="num">6/6</td>
+              <td class="num">4/6</td>
+              <td class="num">1.17</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Intento d'acquisto</td>
+            </tr>
+            
+            <tr>
+              <td>quale macchina espresso comprare per una famiglia numerosa?</td>
+              <td class="num">6/6</td>
+              <td class="num">3/6</td>
+              <td class="num">1.17</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Intento d'acquisto</td>
+            </tr>
+            
+            <tr>
+              <td>quale macchina espresso si scalda più velocemente?</td>
+              <td class="num">6/6</td>
+              <td class="num">4/6</td>
+              <td class="num">1.5</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Casi d'uso specifici</td>
+            </tr>
+            
+            <tr>
+              <td>quale macinacaffè abbinare alla macchina espresso?</td>
+              <td class="num">6/6</td>
+              <td class="num">4/6</td>
+              <td class="num">2.17</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Accessori ed ecosistema</td>
+            </tr>
+            
+            <tr>
+              <td>quale marca di macchine da caffè è più affidabile?</td>
+              <td class="num">6/6</td>
+              <td class="num">3/6</td>
+              <td class="num">1.33</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Best-of generici</td>
+            </tr>
+            
+            <tr>
+              <td>quale marca offre manutenzione programmata?</td>
+              <td class="num">6/6</td>
+              <td class="num">5/6</td>
+              <td class="num">2.0</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Assistenza e durabilità</td>
+            </tr>
+            
+            <tr>
+              <td>quali macchine da caffè durano di più?</td>
+              <td class="num">6/6</td>
+              <td class="num">2/6</td>
+              <td class="num">2.33</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Assistenza e durabilità</td>
+            </tr>
+            
+            <tr>
+              <td>sto per comprare una macchina espresso, budget 300 euro, cosa prendo?</td>
+              <td class="num">6/6</td>
+              <td class="num">5/6</td>
+              <td class="num">1.83</td>
+              <td><span class="badge citato">citato</span></td>
+              <td class="muted">Intento d'acquisto</td>
+            </tr>
+            
+            <tr>
+              <td>quale macchina espresso ha i ricambi più facili da trovare?</td>
+              <td class="num">6/6</td>
+              <td class="num">6/6</td>
+              <td class="num">1.67</td>
+              <td><span class="badge stabile">stabile</span></td>
+              <td class="muted">Intento d'acquisto</td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+      <p class="muted" style="margin-top:12px">
+        <strong>stabile</strong> = citato in tutte le ripetizioni e sempre raccomandato ·
+        <strong>citato</strong> = presente in tutte ma non sempre raccomandato ·
+        <strong>instabile</strong> = presente solo in alcune ·
+        <strong>perso</strong> = mai presente.
+      </p>
+      
+    </div>
+  </section>
+
+  
+  <section class="panel" id="posizionamento" data-panel>
+    <h2>Posizionamento &amp; Sentiment</h2>
+    <p class="lead">Come il brand è posizionato rispetto ai competitor (ordine di citazione e raccomandazione) e con quale tono viene descritto.</p>
+
+    <div class="card">
+      <h3>Mappa di posizionamento <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Ogni bolla è un brand. Asse orizzontale: posizione media (a destra = citato prima). Asse verticale: quanto è raccomandato. Dimensione della bolla: Share of Voice. In alto a destra = posizione ideale. Ogni brand ha un colore fisso (lime = azienda). Se esiste un run precedente, il pallino pieno è la posizione attuale e l'anello vuoto dello stesso colore è la posizione di allora.">i</span></h3>
+      <div class="chart-box tall"><canvas id="posChart"></canvas></div>
+      <div id="posLegend" class="poslegend"></div>
+    </div>
+
+    <div class="card">
+      <h3>Distribuzione del sentiment per brand <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Numero di citazioni per tono (positivo, neutro, negativo, misto) per ciascun brand.">i</span></h3>
+      <div class="chart-box"><canvas id="sentChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h3>Citazioni con sentiment critico <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Estratti reali delle risposte AI in cui un brand tracciato è descritto con tono negativo o misto. Utili per capire cosa correggere nella narrazione.">i</span></h3>
+      
+      <div class="snips">
+        
+        <div class="snip">
+          <div class="meta">
+            <strong style="color:var(--ink)">Velvea</strong>
+            <span class="chip neg">negativo</span>
+            <span>openai</span>
+            <span>· prima macchina espresso seria: quale comprare?</span>
+          </div>
+          <div class="q">“Velvea viene citata per la fascia entry-level, senza raccomandazione diretta”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta">
+            <strong style="color:var(--ink)">Velvea</strong>
+            <span class="chip neg">negativo</span>
+            <span>openai</span>
+            <span>· quale macchina da caffè ha le migliori recensioni degli utenti?</span>
+          </div>
+          <div class="q">“Velvea viene citata tra le alternative disponibili nella fascia media”</div>
+        </div>
+        
+      </div>
+      
+    </div>
+  </section>
+
+  
+  <section class="panel" id="fonti" data-panel>
+    <h2>Fonti</h2>
+    <p class="lead">Da quali siti le AI attingono per rispondere. Sapere dove essere presenti è il cuore della strategia GEO (Generative Engine Optimization).</p>
+
+    
+    <div class="card">
+      <h3>Quota fonti di proprietà <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Percentuale di fonti citate dall'AI che sono di proprietà del brand.">i</span></h3>
+      <div class="statpair">
+        <div class="stat">
+          <div class="value">8.2<small>%</small></div>
+          <div class="label">delle citazioni URL rimandano a un dominio del brand (38 su 463)</div>
+        </div>
+      </div>
+    </div>
+    
+
+    
+    <div class="card">
+      <h3>Domini più citati <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Quante risposte citano ciascun dominio come fonte. Sono i siti su cui è più importante avere contenuti aggiornati e favorevoli al brand.">i</span></h3>
+      <div class="chart-box"><canvas id="srcChart"></canvas></div>
+    </div>
+
+    <div class="card table-scroll">
+      <h3>Fonti e correlazione con la visibilità del brand <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Per ogni dominio confrontiamo la Share of Voice del brand nelle risposte che citano quel dominio (presente) e in quelle che non lo citano (assente). Se 'presente' è molto più alto, quel sito 'porta' visibilità al brand.">i</span></h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Dominio</th>
+            <th class="num">Citazioni</th>
+            <th class="num">SoV con fonte</th>
+            <th class="num">SoV senza fonte</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td>cucinaviva.it</td>
+            <td class="num">45</td>
+            <td class="num">91.1%</td>
+            <td class="num">81.2%</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>altroconsumo.it</td>
+            <td class="num">44</td>
+            <td class="num">84.1%</td>
+            <td class="num">82.4%</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>wikipedia.org</td>
+            <td class="num">43</td>
+            <td class="num">76.7%</td>
+            <td class="num">83.7%</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>techcaffe.it</td>
+            <td class="num">42</td>
+            <td class="num">85.7%</td>
+            <td class="num">82.2%</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>bremora.com</td>
+            <td class="num">41</td>
+            <td class="num">87.8%</td>
+            <td class="num">81.9%</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>ilcomparatore-caffe.it</td>
+            <td class="num">40</td>
+            <td class="num">77.5%</td>
+            <td class="num">83.5%</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>espressoguide.it</td>
+            <td class="num">40</td>
+            <td class="num">82.5%</td>
+            <td class="num">82.7%</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>tazzina.it</td>
+            <td class="num">38</td>
+            <td class="num">92.1%</td>
+            <td class="num">81.3%</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>velvea.it</td>
+            <td class="num">38</td>
+            <td class="num">84.2%</td>
+            <td class="num">82.4%</td>
+            <td><span class="chip own">sito del brand</span></td>
+          </tr>
+          
+          <tr>
+            <td>reddit.com</td>
+            <td class="num">36</td>
+            <td class="num">77.8%</td>
+            <td class="num">83.3%</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>miglioriprodotti.it</td>
+            <td class="num">35</td>
+            <td class="num">85.7%</td>
+            <td class="num">82.3%</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>recensionicasa.it</td>
+            <td class="num">21</td>
+            <td class="num">90.5%</td>
+            <td class="num">82.1%</td>
+            <td></td>
+          </tr>
+          
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card table-scroll">
+      <h3>Pagine citate (URL) <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Le singole pagine web citate come fonte, non solo il dominio. Il conteggio è in quante risposte quella specifica URL compare. Le pagine di proprietà del brand sono evidenziate.">i</span></h3>
+      <table>
+        <thead>
+          <tr>
+            <th>URL</th>
+            <th class="num">Citazioni</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://altroconsumo.it/articolo-776" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://altroconsumo.it/articolo-776</a></td>
+            <td class="num">2</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://miglioriprodotti.it/articolo-123" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://miglioriprodotti.it/articolo-123</a></td>
+            <td class="num">2</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://cucinaviva.it/articolo-828" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://cucinaviva.it/articolo-828</a></td>
+            <td class="num">2</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://velvea.it/articolo-733" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://velvea.it/articolo-733</a></td>
+            <td class="num">2</td>
+            <td><span class="chip own">brand</span></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://tazzina.it/articolo-967" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://tazzina.it/articolo-967</a></td>
+            <td class="num">2</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://wikipedia.org/articolo-560" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://wikipedia.org/articolo-560</a></td>
+            <td class="num">2</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://techcaffe.it/articolo-645" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://techcaffe.it/articolo-645</a></td>
+            <td class="num">2</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://reddit.com/articolo-608" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://reddit.com/articolo-608</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://techcaffe.it/articolo-318" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://techcaffe.it/articolo-318</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://recensionicasa.it/articolo-690" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://recensionicasa.it/articolo-690</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://ilcomparatore-caffe.it/articolo-611" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://ilcomparatore-caffe.it/articolo-611</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://cucinaviva.it/articolo-239" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://cucinaviva.it/articolo-239</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://cucinaviva.it/articolo-602" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://cucinaviva.it/articolo-602</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://ilcomparatore-caffe.it/articolo-483" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://ilcomparatore-caffe.it/articolo-483</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://miglioriprodotti.it/articolo-646" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://miglioriprodotti.it/articolo-646</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://ilcomparatore-caffe.it/articolo-762" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://ilcomparatore-caffe.it/articolo-762</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://espressoguide.it/articolo-671" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://espressoguide.it/articolo-671</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://altroconsumo.it/articolo-308" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://altroconsumo.it/articolo-308</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://tazzina.it/articolo-992" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://tazzina.it/articolo-992</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://wikipedia.org/articolo-110" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://wikipedia.org/articolo-110</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://bremora.com/articolo-236" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://bremora.com/articolo-236</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://altroconsumo.it/articolo-580" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://altroconsumo.it/articolo-580</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://wikipedia.org/articolo-235" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://wikipedia.org/articolo-235</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://velvea.it/articolo-479" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://velvea.it/articolo-479</a></td>
+            <td class="num">1</td>
+            <td><span class="chip own">brand</span></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://velvea.it/articolo-997" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://velvea.it/articolo-997</a></td>
+            <td class="num">1</td>
+            <td><span class="chip own">brand</span></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://cucinaviva.it/articolo-369" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://cucinaviva.it/articolo-369</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://bremora.com/articolo-465" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://bremora.com/articolo-465</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://velvea.it/articolo-141" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://velvea.it/articolo-141</a></td>
+            <td class="num">1</td>
+            <td><span class="chip own">brand</span></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://tazzina.it/articolo-552" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://tazzina.it/articolo-552</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td style="max-width:0"><a href="https://reddit.com/articolo-797" target="_blank" rel="noopener" style="color:var(--info);text-decoration:none;word-break:break-all">https://reddit.com/articolo-797</a></td>
+            <td class="num">1</td>
+            <td></td>
+          </tr>
+          
+        </tbody>
+      </table>
+    </div>
+    
+  </section>
+
+  
+  <section class="panel" id="opportunita" data-panel>
+    <h2>Opportunità</h2>
+    <p class="lead">Le azioni prioritarie: dove il brand è assente, dove è citato ma non raccomandato, e i concorrenti emergenti da tenere d'occhio.</p>
+
+    <div class="card">
+      <h3>Prompt persi <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Domande in cui Velvea non compare mai, in nessuna piattaforma. Sono le lacune di visibilità da colmare per prime.">i</span></h3>
+      
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Categoria</th><th>Prompt</th></tr></thead>
+          <tbody>
+            
+            <tr><td class="muted">Assistenza e durabilità</td><td>quale macchina espresso ha aggiornamenti e ricambi garantiti 10 anni?</td></tr>
+            
+            <tr><td class="muted">Comparazioni di categoria</td><td>capsule compatibili o originali: cosa conviene?</td></tr>
+            
+          </tbody>
+        </table>
+      </div>
+      
+    </div>
+
+    <div class="card">
+      <h3>Citato ma non raccomandato <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Risposte in cui il brand compare ma l'AI non lo raccomanda esplicitamente. C'è visibilità, ma manca la spinta all'azione: opportunità di migliorare la narrazione.">i</span></h3>
+      
+      <div class="snips">
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>qual è la migliore macchina da caffè espresso del 2026?</span></div>
+          <div class="q">“Velvea è menzionata come opzione valida senza però essere la prima scelta”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>migliore macchina espresso qualità prezzo</span></div>
+          <div class="q">“Velvea convince per la qualità ma il prezzo è sopra la media della categoria”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>quale macchina da caffè comprare sotto i 200 euro?</span></div>
+          <div class="q">“Velvea compare nell'elenco ma senza un giudizio esplicito”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>quale macchina da caffè comprare sotto i 200 euro?</span></div>
+          <div class="q">“Velvea è menzionata come opzione valida senza però essere la prima scelta”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>migliore macchina da caffè automatica per casa</span></div>
+          <div class="q">“Velvea convince per la qualità ma il prezzo è sopra la media della categoria”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>quale macchina espresso manuale scegliere per iniziare?</span></div>
+          <div class="q">“Velvea viene citata tra le alternative disponibili nella fascia media”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>migliore macchina da caffè sotto i 500 euro</span></div>
+          <div class="q">“Velvea è indicata come alternativa meno nota rispetto ai marchi principali”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>quale marca di macchine da caffè è più affidabile?</span></div>
+          <div class="q">“Velvea compare nell'elenco ma senza un giudizio esplicito”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>macchina da caffè per ufficio piccolo: quale scegliere?</span></div>
+          <div class="q">“Velvea è una possibilità se il budget è limitato, ma altri marchi risultano preferiti”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>quale macchina espresso occupa poco spazio in cucina?</span></div>
+          <div class="q">“Velvea offre un buon design, anche se la risposta consiglia altri modelli”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>quale macchina espresso occupa poco spazio in cucina?</span></div>
+          <div class="q">“Velvea è tra i marchi elencati, ma la preferenza va ad altri produttori”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>quale macchina da caffè per chi beve 6 caffè al giorno?</span></div>
+          <div class="q">“Velvea compare nell'elenco ma senza un giudizio esplicito”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>macchina da caffè facile da pulire: quale comprare?</span></div>
+          <div class="q">“Velvea viene citata tra le alternative disponibili nella fascia media”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>macchina da caffè facile da pulire: quale comprare?</span></div>
+          <div class="q">“Velvea viene citata tra le alternative disponibili nella fascia media”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>quale macchina espresso si scalda più velocemente?</span></div>
+          <div class="q">“Velvea viene nominata di passaggio nel confronto tra i modelli”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>meglio macchina automatica o manuale per l'espresso?</span></div>
+          <div class="q">“Velvea viene nominata di passaggio nel confronto tra i modelli”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>meglio macchina automatica o manuale per l'espresso?</span></div>
+          <div class="q">“Velvea è una possibilità se il budget è limitato, ma altri marchi risultano preferiti”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>meglio macchina automatica o manuale per l'espresso?</span></div>
+          <div class="q">“Velvea viene citata per la fascia entry-level, senza raccomandazione diretta”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>meglio una macchina con caldaia singola o doppia?</span></div>
+          <div class="q">“Velvea ha recensioni discrete ma la risposta privilegia i brand più diffusi”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>macchina espresso economica o professionale per casa?</span></div>
+          <div class="q">“Velvea offre un buon design, anche se la risposta consiglia altri modelli”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>meglio macinacaffè integrato o separato?</span></div>
+          <div class="q">“Velvea viene nominata di passaggio nel confronto tra i modelli”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>meglio macinacaffè integrato o separato?</span></div>
+          <div class="q">“Velvea ha recensioni discrete ma la risposta privilegia i brand più diffusi”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>quale macchina da caffè tiene meglio il valore nel tempo?</span></div>
+          <div class="q">“Velvea offre un buon design, anche se la risposta consiglia altri modelli”</div>
+        </div>
+        
+        <div class="snip">
+          <div class="meta"><span class="chip">openai</span><span>vale la pena comprare una macchina espresso di fascia alta?</span></div>
+          <div class="q">“Velvea è tra i marchi elencati, ma la preferenza va ad altri produttori”</div>
+        </div>
+        
+      </div>
+      
+    </div>
+
+    <div class="card">
+      <h3>Competitor inattesi <span class="tip" tabindex="0" role="button" aria-label="Info" data-tip="Brand citati dalle AI ma non presenti nella tua configurazione. Utili per scoprire concorrenti emergenti da monitorare o aggiungere all'audit.">i</span></h3>
+      
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Brand</th><th class="num">Menzioni</th></tr></thead>
+          <tbody>
+            <tr><td>Altro brand B</td><td class="num">19</td></tr><tr><td>Altro brand C</td><td class="num">15</td></tr><tr><td>Altro brand A</td><td class="num">12</td></tr>
+          </tbody>
+        </table>
+      </div>
+      
+    </div>
+  </section>
+
+  
+  <section class="panel" id="metodologia" data-panel>
+    <h2>Metodologia</h2>
+    <p class="lead">Come è stato condotto l'audit e cosa significa ogni metrica. Trasparenza sul metodo per una corretta interpretazione dei risultati.</p>
+
+    <div class="card">
+      <h3>Come è stato condotto l'audit</h3>
+      <table>
+        <tbody>
+          <tr><td class="muted">Set di prompt</td><td class="num">50 domande in 6 categorie</td></tr>
+          <tr><td class="muted">Ripetizioni per prompt</td><td class="num">3</td></tr>
+          <tr><td class="muted">Chiamate totali</td><td class="num">300 (300 valide, 0 in errore)</td></tr>
+          <tr><td class="muted">Periodo di raccolta</td><td class="num">06/07/2026 09:30 → 06/07/2026 09:49</td></tr>
+          <tr><td class="muted">Piattaforme e modelli</td><td class="num">gemini · gemini-2.5-flash<br>openai · gpt-4o-2024-08-06</td></tr>
+        </tbody>
+      </table>
+      <p class="muted" style="margin-top:12px">
+        Tutte le chiamate sono state eseguite con web search / grounding attivo, per misurare cosa risponde
+        l'AI con retrieval reale e non solo con la conoscenza interna. Le ripetizioni servono perché le
+        risposte AI variano: le metriche riportano frequenze, mai singole risposte.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Definizione delle metriche</h3>
+      <dl class="defs">
+        <dt>Share of Voice (SoV)</dt>
+        <dd>Percentuale di risposte AI in cui il brand è citato almeno una volta. Misura la presenza complessiva.</dd>
+        <dt>Recommendation rate</dt>
+        <dd>Percentuale di risposte in cui il brand è raccomandato in modo esplicito, non solo menzionato.</dd>
+        <dt>Posizione media</dt>
+        <dd>Ordine medio di prima citazione tra i brand di una risposta (1 = citato per primo). Indica la prominenza.</dd>
+        <dt>Sentiment</dt>
+        <dd>Tono con cui il brand è descritto: positivo, neutro, negativo o misto, classificato per ogni citazione.</dd>
+        <dt>Prompt persi</dt>
+        <dd>Domande in cui il brand non compare in nessuna ripetizione né piattaforma: le opportunità di visibilità.</dd>
+        <dt>Fonti</dt>
+        <dd>Domini citati dalle AI come riferimento. Indicano dove è strategico essere presenti (strategia GEO).</dd>
+      </dl>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap" style="padding-bottom:0">
+    <strong>Nota sulla variabilità.</strong> Le risposte dei modelli AI non sono deterministiche: possono cambiare
+    tra una richiesta e l'altra e nel tempo. Per questo l'audit usa ripetizioni multiple e riporta frequenze aggregate,
+    non singole risposte. I dati fotografano il comportamento delle piattaforme nel periodo indicato e vanno letti come
+    tendenze, non come valori assoluti. Report generato automaticamente da <strong>cit<span style="color:var(--primary-ink)">AI</span>to</strong> · 08/07/2026 21:22 UTC.
+  </div>
+</footer>
+
+<script id="report-data" type="application/json">{"brand_labels": ["Velvea", "Competitor 1", "Competitor 2", "Competitor 3", "Competitor 4", "Competitor 5", "Competitor 6", "Competitor 7"], "categories": {"labels": ["Comparazioni di categoria", "Assistenza e durabilit\u00e0", "Best-of generici", "Casi d\u0027uso specifici", "Accessori ed ecosistema", "Intento d\u0027acquisto"], "rec": [41.7, 41.7, 52.1, 60.0, 55.6, 61.7], "sov": [72.2, 73.3, 81.2, 85.0, 88.9, 93.3]}, "main": "Velvea", "platform": {"brands": [{"is_main": true, "name": "Velvea", "sov": [86.7, 78.7]}, {"is_main": false, "name": "Competitor 1", "sov": [87.3, 88.7]}, {"is_main": false, "name": "Competitor 2", "sov": [50.0, 42.0]}, {"is_main": false, "name": "Competitor 3", "sov": [49.3, 50.0]}, {"is_main": false, "name": "Competitor 4", "sov": [56.0, 40.7]}, {"is_main": false, "name": "Competitor 5", "sov": [54.0, 52.0]}, {"is_main": false, "name": "Competitor 6", "sov": [50.7, 45.3]}, {"is_main": false, "name": "Competitor 7", "sov": [55.3, 46.0]}], "providers": ["gemini", "openai"]}, "positioning": [{"label": "Velvea", "main": true, "r": 28, "x": 1.68, "y": 52.7}, {"label": "Competitor 1", "main": false, "r": 29, "x": 2.36, "y": 28.7}, {"label": "Competitor 3", "main": false, "r": 17, "x": 3.62, "y": 4.7}, {"label": "Competitor 4", "main": false, "r": 16, "x": 3.63, "y": 5.0}, {"label": "Competitor 5", "main": false, "r": 18, "x": 3.35, "y": 6.3}, {"label": "Competitor 7", "main": false, "r": 17, "x": 3.61, "y": 4.3}], "positioning_prev": [{"label": "Velvea", "main": true, "r": 15, "x": 3.52, "y": 14.3}, {"label": "Competitor 1", "main": false, "r": 30, "x": 1.82, "y": 39.7}, {"label": "Competitor 3", "main": false, "r": 17, "x": 3.04, "y": 6.0}, {"label": "Competitor 4", "main": false, "r": 17, "x": 3.1, "y": 4.3}, {"label": "Competitor 5", "main": false, "r": 16, "x": 3.07, "y": 5.3}, {"label": "Competitor 7", "main": false, "r": 17, "x": 2.98, "y": 7.0}], "primary": "#c9a86a", "rec": [52.7, 28.7, 2.7, 4.7, 5.0, 6.3, 2.7, 4.3], "sentiment": {"labels": ["Velvea", "Competitor 1", "Competitor 2", "Competitor 3", "Competitor 4", "Competitor 5", "Competitor 6", "Competitor 7"], "mixed": [0, 0, 0, 0, 0, 0, 0, 0], "negative": [2, 0, 0, 0, 0, 0, 0, 0], "neutral": [17, 112, 73, 69, 62, 82, 68, 68], "positive": [229, 152, 65, 80, 83, 77, 76, 84]}, "sources": {"labels": ["cucinaviva.it", "altroconsumo.it", "wikipedia.org", "techcaffe.it", "bremora.com", "ilcomparatore-caffe.it", "espressoguide.it", "tazzina.it", "velvea.it", "reddit.com", "miglioriprodotti.it", "recensionicasa.it"], "values": [45, 44, 43, 42, 41, 40, 40, 38, 38, 36, 35, 21]}, "sov": [82.7, 88.0, 46.0, 49.7, 48.3, 53.0, 48.0, 50.7], "trend": {"labels": ["20260605-101500", "20260706-093000"], "values": [44.3, 82.7]}}</script>
+<script>
+  const DATA = JSON.parse(document.getElementById("report-data").textContent);
+  // Layout citAIto: accento lime fisso (rispetta primary_color se il progetto ne
+  // imposta uno diverso dal default globale), coerente col CSS via Jinja.
+  const PRIMARY = "#c8f542";
+  const GREY = "#d4d4d8";        // competitor: grigi freddi
+  const REC = "#a1a1aa";         // recommendation rate: grigio freddo più scuro
+  const FONT = { family: "'JetBrains Mono', ui-monospace, monospace" };
+  Chart.defaults.font.family = FONT.family;
+  Chart.defaults.color = "#71717a";
+  Chart.defaults.borderColor = "#f0f0f1";   // griglia fredda chiara
+
+  // Versione traslucida del colore primario (per riempimenti area), derivata a
+  // runtime così resta parametrica su qualunque accento.
+  function primaryFill(alpha) {
+    const h = (PRIMARY || "").replace("#", "");
+    if (h.length === 6) {
+      const r = parseInt(h.slice(0, 2), 16),
+            g = parseInt(h.slice(2, 4), 16),
+            b = parseInt(h.slice(4, 6), 16);
+      return `rgba(${r},${g},${b},${alpha})`;
+    }
+    return PRIMARY;
+  }
+
+  const charts = {};          // id -> Chart
+  const panelCharts = {};     // panelId -> [ids]
+  function reg(panel, id, chart) {
+    charts[id] = chart;
+    (panelCharts[panel] = panelCharts[panel] || []).push(id);
+  }
+  const pctAxis = { beginAtZero: true, max: 100, ticks: { callback: v => v + "%" } };
+
+  function barColors(labels) {
+    return labels.map(n => n === DATA.main ? PRIMARY : GREY);
+  }
+
+  // Palette categorica validata (skill dataviz), CVD-safe su fondo chiaro freddo:
+  // un colore fisso per brand, lime (primario) per l'azienda, grigio oltre gli 8 slot.
+  // Riusata da mappa di posizionamento e grafico piattaforme.
+  const PALETTE = ["#2a78d6","#1baf7a","#eda100","#008300","#4a3aa7","#e34948","#e87ba4","#eb6834"];
+  const GRAY = "#b8b2a6";
+  const BRANDCOLOR = {};
+  { let ci = 0; DATA.brand_labels.forEach(name => {
+      BRANDCOLOR[name] = (name === DATA.main) ? PRIMARY : (ci < PALETTE.length ? PALETTE[ci++] : GRAY);
+  }); }
+
+  // Share of Voice + recommendation rate affiancati (barre raggruppate per brand).
+  // Factory: ogni chart riceve i propri dataset (niente riferimenti condivisi).
+  const sovRecData = () => ({ labels: DATA.brand_labels, datasets: [
+    { label: "Share of Voice", data: DATA.sov, backgroundColor: PRIMARY, borderRadius: 6 },
+    { label: "Recommendation rate", data: DATA.rec, backgroundColor: REC, borderRadius: 6 }
+  ] });
+  const sovRecOpts = { maintainAspectRatio: false, plugins: { legend: { position: "bottom" } }, scales: { y: pctAxis } };
+
+  // --- Sintesi: SoV + recommendation top brand ---
+  if (document.getElementById("sovMain")) {
+    reg("sintesi", "sovMain", new Chart(document.getElementById("sovMain"), {
+      type: "bar", data: sovRecData(), options: sovRecOpts
+    }));
+  }
+
+  // --- SoV panel ---
+  if (document.getElementById("sovAll")) {
+    reg("sov", "sovAll", new Chart(document.getElementById("sovAll"), {
+      type: "bar", data: sovRecData(), options: sovRecOpts
+    }));
+  }
+  if (document.getElementById("trendChart")) {
+    reg("sov", "trendChart", new Chart(document.getElementById("trendChart"), {
+      type: "line",
+      data: { labels: DATA.trend.labels, datasets: [{ label: "SoV " + DATA.main, data: DATA.trend.values, borderColor: PRIMARY, backgroundColor: primaryFill(.16), fill: true, tension: .25, pointRadius: 4 }] },
+      options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: pctAxis } }
+    }));
+  }
+
+  // --- Breakdown per piattaforma: barre raggruppate, SoV di ogni brand per provider ---
+  if (document.getElementById("platformChart") && DATA.platform) {
+    const pf = DATA.platform;
+    reg("sov", "platformChart", new Chart(document.getElementById("platformChart"), {
+      type: "bar",
+      data: {
+        labels: pf.providers,
+        datasets: pf.brands.map(b => ({
+          label: b.name,
+          data: b.sov,
+          backgroundColor: BRANDCOLOR[b.name] || GREY,
+          borderRadius: 5
+        }))
+      },
+      options: { maintainAspectRatio: false, plugins: { legend: { position: "bottom" } }, scales: { y: pctAxis } }
+    }));
+  }
+
+  // --- Categorie ---
+  if (document.getElementById("catChart")) {
+    reg("categorie", "catChart", new Chart(document.getElementById("catChart"), {
+      type: "bar",
+      data: {
+        labels: DATA.categories.labels,
+        datasets: [
+          { label: "Share of Voice", data: DATA.categories.sov, backgroundColor: PRIMARY, borderRadius: 5 },
+          { label: "Recommendation rate", data: DATA.categories.rec, backgroundColor: REC, borderRadius: 5 }
+        ]
+      },
+      options: { indexAxis: "y", maintainAspectRatio: false, plugins: { legend: { position: "bottom" } }, scales: { x: pctAxis } }
+    }));
+  }
+
+  // --- Posizionamento (bubble): un colore per brand, attuale vs precedente ---
+  if (document.getElementById("posChart")) {
+    const pts = DATA.positioning;
+    const prev = DATA.positioning_prev || [];
+    const brandColor = BRANDCOLOR;
+    const datasets = [];
+
+    if (prev.length) {
+      // run precedente: anello vuoto nel colore del brand
+      datasets.push({
+        type: "bubble", label: "Run precedente", data: prev,
+        backgroundColor: "transparent",
+        borderColor: prev.map(p => brandColor[p.label]), borderWidth: 2, order: 2
+      });
+    }
+    // run attuale: pallino pieno nel colore del brand (anello scuro per l'azienda)
+    datasets.push({
+      type: "bubble", label: prev.length ? "Run attuale" : "Brand", data: pts,
+      backgroundColor: pts.map(p => brandColor[p.label]),
+      borderColor: pts.map(p => p.main ? "#18181b" : "#ffffff"),
+      borderWidth: pts.map(p => p.main ? 2 : 1.5), order: 1
+    });
+
+    reg("posizionamento", "posChart", new Chart(document.getElementById("posChart"), {
+      type: "bubble",
+      data: { datasets },
+      options: {
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: { label: c => {
+              const tag = c.dataset.label === "Run precedente" ? " (prec.)" : "";
+              return `${c.raw.label}${tag}: pos ${c.raw.x}, racc ${c.raw.y}%`;
+            } }
+          }
+        },
+        scales: {
+          x: { reverse: true, title: { display: true, text: "Posizione media (a destra = citato prima)" } },
+          y: { beginAtZero: true, max: 100, title: { display: true, text: "Recommendation rate (%)" }, ticks: { callback: v => v + "%" } }
+        }
+      }
+    }));
+
+    // legenda per-brand: colore = brand; pieno = attuale, vuoto = precedente
+    const legend = document.getElementById("posLegend");
+    if (legend) {
+      const shown = new Set(pts.concat(prev).map(p => p.label));
+      const items = DATA.brand_labels.filter(n => shown.has(n)).map(n =>
+        `<span class="pl-item"><span class="pl-dot" style="background:${brandColor[n]}"></span>${n}</span>`
+      );
+      legend.innerHTML = items.join("") +
+        (prev.length ? `<span class="pl-item pl-note">● attuale · ○ precedente</span>` : "");
+    }
+  }
+
+  // --- Sentiment stacked ---
+  if (document.getElementById("sentChart")) {
+    const s = DATA.sentiment;
+    reg("posizionamento", "sentChart", new Chart(document.getElementById("sentChart"), {
+      type: "bar",
+      data: { labels: s.labels, datasets: [
+        { label: "Positivo", data: s.positive, backgroundColor: "#15803d" },
+        { label: "Neutro", data: s.neutral, backgroundColor: "#a1a1aa" },
+        { label: "Negativo", data: s.negative, backgroundColor: "#dc2626" },
+        { label: "Misto", data: s.mixed, backgroundColor: "#d97706" }
+      ] },
+      options: { maintainAspectRatio: false, plugins: { legend: { position: "bottom" } }, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } }
+    }));
+  }
+
+  // --- Fonti ---
+  if (document.getElementById("srcChart")) {
+    reg("fonti", "srcChart", new Chart(document.getElementById("srcChart"), {
+      type: "bar",
+      data: { labels: DATA.sources.labels, datasets: [{ label: "Citazioni", data: DATA.sources.values, backgroundColor: PRIMARY, borderRadius: 5 }] },
+      options: { indexAxis: "y", maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+    }));
+  }
+
+  // --- Tab switching ---
+  const buttons = document.querySelectorAll(".tab-btn");
+  const panels = document.querySelectorAll(".panel");
+  function show(target) {
+    panels.forEach(p => p.classList.toggle("active", p.id === target));
+    buttons.forEach(b => b.classList.toggle("active", b.dataset.target === target));
+    (panelCharts[target] || []).forEach(id => charts[id] && charts[id].resize());
+  }
+  buttons.forEach(b => b.addEventListener("click", () => show(b.dataset.target)));
+
+  // Ridimensiona i grafici prima della stampa (i tab nascosti tornano visibili)
+  window.addEventListener("beforeprint", () => { Object.values(charts).forEach(c => c.resize()); });
+
+  // --- Tooltip info: click per aprire (touch), click fuori / Esc per chiudere ---
+  const infos = document.querySelectorAll(".tip");
+  infos.forEach(el => {
+    el.addEventListener("click", e => {
+      e.stopPropagation();
+      const wasOpen = el.classList.contains("open");
+      infos.forEach(o => o.classList.remove("open"));
+      if (!wasOpen) el.classList.add("open");
+    });
+  });
+  document.addEventListener("click", () => infos.forEach(o => o.classList.remove("open")));
+  document.addEventListener("keydown", e => { if (e.key === "Escape") infos.forEach(o => o.classList.remove("open")); });
+</script>
+</body>
+</html>
