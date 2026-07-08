@@ -6,6 +6,7 @@ import type { SceneContext } from "./utils";
 import { initContext } from "./context";
 import { initPointerFx } from "./pointerFx";
 
+import { initCover } from "../scenes/scene0-cover";
 import { initQuestionAnswer } from "../scenes/scene1-question";
 import { initAbsence } from "../scenes/scene3-absence";
 import { initFunnel } from "../scenes/scene4-funnel";
@@ -72,6 +73,7 @@ export function initOrchestrator(): void {
       }
 
       // --- Scene ---
+      initCover(ctx);
       initQuestionAnswer(ctx);
       initAbsence(ctx);
       initFunnel(ctx);

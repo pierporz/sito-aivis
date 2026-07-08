@@ -2,12 +2,11 @@ import { defineConfig } from "vite";
 import { resolve } from "node:path";
 
 export default defineConfig({
-  // Multi-page: la home narrativa (index) e la seconda pagina "Il funnel invisibile" (funnel)
+  // Sito one-page: unica entry, la home narrativa (index)
   build: {
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
-        funnel: resolve(__dirname, "funnel.html"),
       },
     },
   },

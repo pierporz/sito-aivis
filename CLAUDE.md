@@ -1,8 +1,8 @@
-# CLAUDE.md — Sito scrollytelling aivis
+# CLAUDE.md — Sito scrollytelling citAIto
 
 ## Cos'è
 
-Sito one-page scrollytelling per "aivis", tool di AI Visibility Audit. Racconta una storia mentre si scorre, con scene pinnate, transizioni di sfondo e animazioni scroll-driven. Qualità di riferimento: Apple product page, Stripe, lusion.co. Non deve sembrare un template.
+Sito one-page scrollytelling per "citAIto", tool di AI Visibility Audit. Racconta una storia mentre si scorre, con scene pinnate, transizioni di sfondo e animazioni scroll-driven. Qualità di riferimento: Apple product page, Stripe, lusion.co. Non deve sembrare un template.
 
 **Stato: costruito e in produzione.** Live su Cloudflare Pages → https://sito-aivis.pages.dev
 
@@ -47,7 +47,7 @@ Sito one-page scrollytelling per "aivis", tool di AI Visibility Audit. Racconta 
   - `pointerFx.ts` — spotlight lime che segue il cursore (aggiorna `--mx/--my` su `.cursor-glow`, solo desktop, no reduced)
   - `reveal.ts` — `revealOnEnter`: reveal semplice all'ingresso, usato su mobile (niente pin/scrub)
   - `utils.ts` — `qs/qsa`, colori `BG`, `formatIt` (numeri IT), `renderKpiValue`, tipo `SceneContext`
-- `src/scenes/` — un modulo per scena: `scene1-question`, `scene3-absence`, `scene4-funnel`, `scene5-measure`, `scene6-numbers`, `scene7-after`, `scene8-cta` (la scena 2 è fusa nella 1)
+- `src/scenes/` — un modulo per scena: `scene0-cover`, `scene1-question`, `scene3-absence`, `scene4-funnel`, `scene5-measure`, `scene6-numbers`, `scene7-after`, `scene8-cta` (la scena 2 è fusa nella 1)
 - `src/styles/` — `tokens.css`, `base.css` (layout/navbar/progress/contesti), `scenes.css` (stili per scena)
 
 Sfondo globale: un unico `.bg-layer` fisso il cui colore cross-fade tra le scene. **I crossfade sono animati DENTRO le timeline pinnate** delle scene 3 (→nero) e 7 (→lime→nero), non con trigger separati — così le posizioni restano corrette col pinning. Su mobile (niente pin) il colore è guidato da `context.ts`.
@@ -56,21 +56,25 @@ Sfondo globale: un unico `.bg-layer` fisso il cui colore cross-fade tra le scene
 
 Ogni scena è full-viewport, pinnata con ScrollTrigger; transizioni fluide legate allo scroll, mai salti.
 
+**COVER — apertura** (`#cover-intro`, fondo nero con texture di punti locale): il wordmark gigante **citAIto** (con la "AI" in lime, vedi sotto) e, sotto, l'invito **"scorri"** con una freccia lampeggiante verso il basso. Non è una `data-scene` (quindi navbar/observer la ignorano): ha sfondo nero opaco proprio, così funziona in ogni modalità. Su desktop il contenuto sale e sfuma allo scroll (`scene0-cover.ts`); poi inizia la SCENA 1.
+
+**Wordmark:** ovunque appaia "citAIto" la sillaba **"AI"** è in un colore diverso (accento lime, `.brand-ai`) per staccarla dal bianco; sulla scena lime torna al colore del testo per restare leggibile.
+
 **SCENA 1+2 — "La domanda / la risposta"** (`#scene-question`, sfondo chiaro `#f5f5f2`): una sola finestra chat pinnata, con sopra il wordmark **"chatgpt"** (nome di AI generica). Legato allo scroll: la domanda "qual è la migliore macchina da caffè espresso?" si digita lettera per lettera, poi appaiono 5 competitor fittizi riga per riga e una 6ª riga resta vuota col cursore. Sullo sfondo, frammenti di prompt reali fluttuano con parallasse. In uscita chat + wordmark sfumano.
 
 **SCENA 3 — "L'assenza"** (crossfade a `#0a0a0b`): typography gigante allineata a sinistra "Il tuo brand non c'era." e, in basso a destra, in mono lime, "E nessuno te l'ha detto."
 
-**SCENA 4 — "Il nuovo funnel"** (nero), in due fasi: (1) etichetta **● google** + 10 righe SERP azzurre/grigie + "Non ci sono più 10 posizioni." appaiono insieme; (2) spariscono insieme e al loro posto emergono etichetta **● chatgpt** + la bolla di risposta AI + "C'è una risposta sola. O ci sei, o non esisti."
+**SCENA 4 — "Il nuovo funnel"** (nero), in due fasi: (1) etichetta **● google** + 10 righe SERP azzurre/grigie + "Non ci sono più 10 posizioni." appaiono insieme; (2) i risultati Google si **congelano in una lastra di vetro che si spacca**: un flash d'impatto, le schegge (griglia di triangoli generati in JS, ognuno con direzione di fuga radiale + gravità + rotazione, in `scene4-funnel.ts`/`buildShatter`) partono verso l'esterno e, dietro, emergono etichetta **● chatgpt** + la bolla di risposta AI + "C'è una risposta sola. O ci sei, o non esisti." L'effetto vetro è **solo desktop** (scrubbato nella timeline pinnata); su mobile/reduced la bolla è già formata.
 
-**SCENA 5 — "La misura"** (nero): due colonne — a sinistra il wordmark "aivis" con una riga di descrizione, a destra i tre step numerati (01/02/03) che si "accendono" in sequenza.
+**SCENA 5 — "La misura"** (nero): due colonne — a sinistra il wordmark "citAIto" con una riga di descrizione, a destra i tre step numerati (01/02/03) che si "accendono" in sequenza.
 
 **SCENA 6 — "I numeri"** (nero): i tre KPI giganti in mono sulla **stessa schermata**, che contano da 0 **tutti insieme**: "44%" (share of voice), "3,5" (posizione media), "9 su 50" (domande in cui non esisti).
 
-**SCENA 7 — "Il dopo"** (crossfade verso lime `#c8f542` pieno, testo nero — unico colore del sito): **prima** appare la frase "Questo è quello che succede quando sai dove intervenire.", **poi** i numeri risalgono verso i valori migliorati (44→83%, 3,5→1,7, 9→2). Etichetta **● aivis** sopra i numeri. In uscita il contenuto sfuma e lo sfondo torna nero.
+**SCENA 7 — "Il dopo"** (crossfade verso lime `#c8f542` pieno, testo nero — unico colore del sito): **prima** appare la frase "Questo è quello che succede quando sai dove intervenire.", **poi** i numeri risalgono verso i valori migliorati (44→83%, 3,5→1,7, 9→2). Etichetta **● citAIto** sopra i numeri. In uscita il contenuto sfuma e lo sfondo torna nero.
 
-**SCENA 8 — CTA** (nero): "Scopri cosa dicono le AI del tuo brand." + form email inline (solo UI, validazione client, nessun backend) + nota "Report di esempio in 48h". Footer: aivis · un prodotto Orion Primis · privacy.
+**SCENA 8 — CTA** (nero): "Scopri cosa dicono le AI del tuo brand." + form email inline (solo UI, validazione client, nessun backend) + nota "Report di esempio in 48h". Footer: citAIto · privacy.
 
-**Elementi trasversali:** trama di punti (`.dotfield`) su tutte le scene scure; spotlight lime che segue il cursore; progress indicator verticale a destra; navbar minimale (wordmark "aivis" + CTA lime) che appare dalla scena 3, con contrasto invertito sulla scena lime.
+**Elementi trasversali:** trama di punti (`.dotfield`) su tutte le scene scure; spotlight lime che segue il cursore; progress indicator verticale a destra; navbar minimale (wordmark "citAIto" + CTA lime) che appare dalla scena 3, con contrasto invertito sulla scena lime.
 
 ## Vincoli tecnici
 
@@ -81,18 +85,6 @@ Ogni scena è full-viewport, pinnata con ScrollTrigger; transizioni fluide legat
 - Lighthouse: performance e accessibilità ≥ 90; contrasto conforme
 - Tutto il copy in italiano
 - Codice organizzato: `src/scenes/` un modulo per scena, orchestrazione ScrollTrigger centralizzata in `src/lib/`
-
-## Seconda pagina — "Il funnel invisibile" (`/funnel.html`)
-
-Variante narrativa alternativa, **estetica completamente diversa** dalla home: nessun dark-mode, niente lime. Idea centrale: **il design stesso evolve dal web del 2005 all'interfaccia AI del 2026 mentre scorri**.
-
-- Vite è ora **multi-page**: `vite.config.ts` → `rollupOptions.input` con `main` (index.html) e `funnel` (funnel.html). Le due pagine sono indipendenti e coesistono.
-- Codice isolato in `src/funnel/` (non condivide CSS/scene con la home; riusa solo `qs/qsa/formatIt` e `revealOnEnter` da `src/lib/`).
-  - `main.ts` — entry; `orchestrator.ts` — matchMedia + progress bar orizzontale in alto; `era.ts` — IntersectionObserver che imposta la classe d'epoca sul body (font) e, su mobile/reduced, guida `--e`; `scenes.ts` — le 8 scene in un unico file; `styles.css` — tutti gli stili + i token evolutivi.
-- **Motore del morphing:** un'unica CSS custom property `--e` (0 = 2005, 1 = 2026). Tutti i colori sono `color-mix(in oklab, <2005>, <2026> calc(var(--e) * 100%))`; anche raggi e interlinea scalano con `--e`. Lo scroll **scruba `--e` dentro la timeline pinnata della scena 3** (come i crossfade della home); su mobile/reduced la guida `era.ts` via observer. Il font-family cambia netto al confine di scena (Georgia → Instrument Sans, con Newsreader italic per gli accenti).
-- Poli: **2005** bianco `#fff`, nero, link blu `#1a0dab` underline, viola visitato `#609`, verde URL, Georgia, spigoli vivi, searchbox beveled con lente. **2026** avorio `#f7f4ee`, inchiostro `#1f1d1a`, accento terracotta `#d9603b`, Instrument Sans + Newsreader, angoli 20px, bolla conversazionale.
-- Scene: 1 SERP 2005 (col **easter egg**: il 10° risultato "aivis" già in terracotta moderno) → 2 la gara (CTR decrescenti) → 3 il morphing (link che si fondono, `--e` 0→1) → 4 la risposta AI → 5 l'invisibile (3 bolle, slot tratteggiato al posto del brand) → 6 aivis (3 passaggi orizzontali con tabelle) → 7 prova prima/dopo (contatori) → 8 CTA.
-- Deploy: Cloudflare Pages builda `dist/` con entrambe le pagine, la seconda è raggiungibile a `/funnel`.
 
 ## Note per modifiche future
 

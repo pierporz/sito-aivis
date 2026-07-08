@@ -48,7 +48,7 @@ export function initAfter(ctx: SceneContext): void {
   tl.to(line, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }, 0.3);
   tl.to({}, { duration: 0.5 }); // respiro
 
-  // ...poi appare l'etichetta "aivis" e i numeri risalgono tutti insieme
+  // ...poi appare l'etichetta "citAIto" e i numeri risalgono tutti insieme
   tl.to(brand, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" });
   kpis.forEach((kpi) => {
     const counter = { v: num(kpi, "from") };

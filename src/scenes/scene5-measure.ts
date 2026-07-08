@@ -5,7 +5,7 @@ import type { SceneContext } from "../lib/utils";
 import { revealOnEnter } from "../lib/reveal";
 
 /**
- * SCENA 5 — La misura. Appare il wordmark "aivis" con la sua descrizione e i tre
+ * SCENA 5 — La misura. Appare il wordmark "citAIto" con la sua descrizione e i tre
  * step numerati (01 / 02 / 03) si "accendono" in sequenza. La trama di punti di
  * sfondo è globale (vedi .dotfield), attiva su tutte le scene scure.
  */

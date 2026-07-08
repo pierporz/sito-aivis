@@ -76,6 +76,16 @@ a {
   color: inherit;
 }
 
+/* "AI" evidenziata nel wordmark citAIto: accento lime che stacca dal bianco.
+   Sulla scena lime (fondo pieno) torna al colore del testo per restare leggibile. */
+.brand-ai {
+  color: var(--c-lime);
+}
+.ctx-lime .brand-ai,
+.scene--lime .brand-ai {
+  color: currentColor;
+}
+
 main {
   position: relative;
   z-index: 1;

@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>aivis — scopri cosa dicono le AI del tuo brand</title>
+    <title>citAIto — scopri cosa dicono le AI del tuo brand</title>
     <meta
       name="description"
-      content="aivis misura la tua visibilità dentro le risposte dell'AI. 500 prompt reali su ChatGPT, Gemini e Claude: scopri quando ti citano, quando ti ignorano."
+      content="citAIto misura la tua visibilità dentro le risposte dell'AI. 500 prompt reali su ChatGPT, Gemini e Claude: scopri quando ti citano, quando ti ignorano."
     />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -27,7 +27,7 @@
 
     <!-- Navbar minimale: nascosta, appare dopo la scena 3 -->
     <header class="navbar" data-navbar>
-      <a class="navbar__brand" href="#top">aivis</a>
+      <a class="navbar__brand" href="#top">cit<span class="brand-ai">AI</span>to</a>
       <a class="navbar__cta" href="#cta">Analizza il tuo brand</a>
     </header>
 
@@ -39,6 +39,21 @@
     </div>
 
     <main id="top">
+      <!-- COVER — schermata d'apertura -->
+      <section class="cover" id="cover-intro">
+        <div class="cover__inner" data-cover-inner>
+          <h1 class="cover__brand">cit<span class="brand-ai">AI</span>to</h1>
+          <a class="cover__scroll" href="#scene-question" data-cover-scroll aria-label="Scorri per iniziare">
+            <span class="cover__scroll-label">scorri</span>
+            <span class="cover__arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 4v15M6 13l6 6 6-6" />
+              </svg>
+            </span>
+          </a>
+        </div>
+      </section>
+
       <!-- SCENA 1 — La domanda -->
       <section class="scene scene--light" id="scene-question" data-scene="1">
         <div class="scene__pin" data-pin>
@@ -137,7 +152,7 @@
         <div class="scene__pin" data-pin>
           <div class="measure">
             <div class="measure__intro">
-              <span class="measure__wordmark" data-measure-wordmark>aivis</span>
+              <span class="measure__wordmark" data-measure-wordmark>cit<span class="brand-ai">AI</span>to</span>
               <p class="measure__lead">Come misuriamo davvero la tua visibilità nelle risposte dell'AI.</p>
             </div>
             <ol class="steps">
@@ -184,7 +199,7 @@
       <section class="scene scene--lime" id="scene-after" data-scene="7">
         <div class="scene__pin" data-pin>
           <div class="after">
-            <span class="after__brand" data-after-brand>aivis</span>
+            <span class="after__brand" data-after-brand>cit<span class="brand-ai">AI</span>to</span>
             <div class="kpis kpis--after" data-kpis-after>
               <figure class="kpi" data-kpi-after data-from="44" data-to="83" data-suffix="%">
                 <span class="kpi__value" data-kpi-value>44%</span>
@@ -223,7 +238,7 @@
           </form>
           <p class="cta__note" data-cta-note>Report di esempio in 48h.</p>
           <footer class="footer">
-            aivis · un prodotto Orion Primis · <a href="#top">privacy</a>
+            cit<span class="brand-ai">AI</span>to · <a href="#top">privacy</a>
           </footer>
         </div>
       </section>
