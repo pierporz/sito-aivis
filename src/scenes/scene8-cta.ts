@@ -3,8 +3,12 @@ import { gsap } from "gsap";
 import { qs } from "../lib/utils";
 import type { SceneContext } from "../lib/utils";
 
+const CONTACT_EMAIL = "info@citaito.it";
+
 /**
- * SCENA 8 — CTA. Titolo, form email inline (solo UI, nessun backend) e footer.
+ * SCENA 8 — CTA. Titolo, form email inline e footer. Nessun backend: alla
+ * conferma apriamo il client email dell'utente con un messaggio già pronto
+ * indirizzato a info@citaito.it (mailto), così la richiesta arriva in casella.
  */
 export function initCta(ctx: SceneContext): void {
   const section = qs("#cta");
@@ -29,9 +33,19 @@ export function initCta(ctx: SceneContext): void {
       return;
     }
 
+    // Apre il client email con un messaggio già pronto verso info@citaito.it
+    const subject = "Richiesta report — AI Visibility";
+    const body =
+      `Ciao,\n` +
+      `vorrei sapere cosa dicono le AI del mio brand e ricevere un report di esempio.\n\n` +
+      `La mia email: ${value}\n\n` +
+      `—\nRichiesta inviata da citaito.it`;
+    const mailto = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailto;
+
     input.classList.remove("is-invalid");
     note.classList.add("is-success");
-    note.textContent = "Fatto. Ti mandiamo un report di esempio entro 48h.";
+    note.textContent = `Ti abbiamo aperto una mail già pronta per ${CONTACT_EMAIL} — premi invia.`;
     form.reset();
     if (!ctx.reduced) gsap.fromTo(note, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" });
   });

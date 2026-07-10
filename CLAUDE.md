@@ -72,7 +72,7 @@ Ogni scena è full-viewport, pinnata con ScrollTrigger; transizioni fluide legat
 
 **SCENA 7 — "Il dopo"** (crossfade verso lime `#c8f542` pieno, testo nero — unico colore del sito): **prima** appare la frase "Questo è quello che succede quando sai dove intervenire.", **poi** i numeri risalgono verso i valori migliorati (44→83%, 3,5→1,7, 9→2). Etichetta **● citAIto** sopra i numeri. In uscita il contenuto sfuma e lo sfondo torna nero.
 
-**SCENA 8 — CTA** (nero): "Scopri cosa dicono le AI del tuo brand." + form email inline (solo UI, validazione client, nessun backend) + nota "Report di esempio in 48h". Footer: citAIto · privacy.
+**SCENA 8 — CTA** (nero): "Scopri cosa dicono le AI del tuo brand." + form email inline (validazione client, nessun backend: alla conferma apre un `mailto:info@citaito.it` con messaggio già pronto) + nota "Report di esempio in 48h". Footer: citAIto · privacy (→ `public/privacy.html`).
 
 **Elementi trasversali:** trama di punti (`.dotfield`) su tutte le scene scure; spotlight lime che segue il cursore; progress indicator verticale a destra; navbar minimale (wordmark "citAIto" + CTA lime) che appare dalla scena 3, con contrasto invertito sulla scena lime.
 
