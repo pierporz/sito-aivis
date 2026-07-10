@@ -13,10 +13,10 @@ const bgColor = (name: Ctx): string => (name === "light" ? BG.light : name === "
  * corrette anche col pinning e funzionante con prefers-reduced-motion.
  *
  * Il contesto guida il contrasto di navbar e progress indicator (via classi
- * .ctx-* sul body) e la comparsa della navbar (nascosta solo sulle scene chiare).
+ * .ctx-* sul body). La navbar è sempre visibile (vedi base.css): qui ne regoliamo
+ * solo i colori tramite le classi .ctx-*.
  */
 export function initContext(reduced: boolean): void {
-  const navbar = qs("[data-navbar]");
   const bg = qs("[data-bg]");
   const sections = qsa("[data-scene]");
   if (sections.length === 0) return;
@@ -35,8 +35,6 @@ export function initContext(reduced: boolean): void {
     document.body.classList.remove("ctx-light", "ctx-dark", "ctx-lime");
     document.body.classList.add("ctx-" + name);
 
-    if (navbar) toggleNavbar(navbar, name !== "light", reduced);
-
     // Su mobile il pinning è assente e le timeline di scena non girano: qui
     // guidiamo lo sfondo con un crossfade temporizzato. Su desktop lo sfondo è
     // già animato (scrubbed) dentro le timeline pinnate, quindi non lo tocchiamo.
@@ -54,18 +52,4 @@ export function initContext(reduced: boolean): void {
     { rootMargin: "-50% 0px -50% 0px", threshold: 0 }
   );
   sections.forEach((s) => obs.observe(s));
-}
-
-function toggleNavbar(navbar: Element, show: boolean, reduced: boolean): void {
-  navbar.classList.toggle("is-visible", show);
-  if (reduced) {
-    gsap.set(navbar, { opacity: show ? 1 : 0, y: show ? 0 : "-100%" });
-    return;
-  }
-  gsap.to(navbar, {
-    opacity: show ? 1 : 0,
-    y: show ? 0 : "-100%",
-    duration: 0.45,
-    ease: "power3.out",
-  });
 }

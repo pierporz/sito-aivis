@@ -6,8 +6,12 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { initOrchestrator } from "./lib/scrollOrchestrator";
+import { initCookieBanner } from "./lib/cookieBanner";
 
 gsap.registerPlugin(ScrollTrigger);
+
+// Indipendente dallo scroll: mostrabile subito, non attende i font
+initCookieBanner();
 
 // ScrollTrigger deve rimisurare dopo il caricamento dei font (i clamp cambiano gli offset)
 const start = () => initOrchestrator();

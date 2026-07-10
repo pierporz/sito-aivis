@@ -25,7 +25,7 @@
     <!-- Spotlight lime che segue il cursore e "accende" la griglia -->
     <div class="cursor-glow" data-cursor-glow aria-hidden="true"></div>
 
-    <!-- Navbar minimale: nascosta, appare dopo la scena 3 -->
+    <!-- Navbar minimale: sempre visibile, così la CTA è cliccabile da subito -->
     <header class="navbar" data-navbar>
       <a class="navbar__brand" href="#top">cit<span class="brand-ai">AI</span>to</a>
       <a class="navbar__cta" href="#cta">Analizza il tuo brand</a>
@@ -241,11 +241,20 @@
           </a>
           <p class="cta__note" data-cta-note>Report di esempio in 48h.</p>
           <footer class="footer">
-            cit<span class="brand-ai">AI</span>to · <a href="#top">privacy</a>
+            cit<span class="brand-ai">AI</span>to · <a href="/privacy.html">privacy</a>
           </footer>
         </div>
       </section>
     </main>
+
+    <!-- Cookie banner: solo cookie tecnici, nessun tracciamento -->
+    <div class="cookie" data-cookie hidden>
+      <p class="cookie__text">
+        Usiamo solo cookie tecnici, necessari al funzionamento del sito.
+        <a href="/privacy.html">Privacy</a>.
+      </p>
+      <button class="cookie__btn" type="button" data-cookie-accept>Ho capito</button>
+    </div>
 
     <script type="module" src="/src/main.ts"></script>
   </body>

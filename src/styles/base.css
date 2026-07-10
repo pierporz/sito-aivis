@@ -133,11 +133,7 @@ main {
   align-items: center;
   justify-content: space-between;
   padding: 1rem var(--space-page);
-  opacity: 0;
-  transform: translateY(-100%);
-  pointer-events: none;
-}
-.navbar.is-visible {
+  /* Sempre visibile fin dalla cover: la CTA dev'essere cliccabile da subito */
   pointer-events: auto;
 }
 .navbar__brand {
@@ -163,6 +159,11 @@ main {
   transform: translateY(-1px);
 }
 
+/* Contesto chiaro (scena 1): il wordmark bianco sparirebbe, va reso scuro */
+.ctx-light .navbar__brand {
+  color: var(--c-black);
+}
+
 /* Contesto lime (scena 7): la navbar inverte i colori per restare leggibile */
 .ctx-lime .navbar__brand {
   color: var(--c-black);
@@ -170,6 +171,59 @@ main {
 .ctx-lime .navbar__cta {
   background: var(--c-black);
   color: var(--c-lime);
+}
+
+/* --- Cookie banner --- */
+.cookie {
+  position: fixed;
+  left: clamp(1rem, 3vw, 2rem);
+  bottom: clamp(1rem, 3vw, 2rem);
+  z-index: 60;
+  max-width: min(420px, calc(100vw - 2rem));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem 1.2rem;
+  padding: 1rem 1.2rem;
+  background: var(--c-gray-900);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out);
+}
+.cookie.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.cookie__text {
+  flex: 1 1 200px;
+  font-family: var(--font-body);
+  font-size: var(--fs-caption);
+  line-height: 1.45;
+  color: var(--c-gray-300);
+}
+.cookie__text a {
+  color: var(--c-white);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.cookie__btn {
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--c-black);
+  background: var(--c-lime);
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.6rem 1.1rem;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease-out), filter 0.15s var(--ease-out);
+}
+.cookie__btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
 }
 
 /* --- Progress indicator --- */
